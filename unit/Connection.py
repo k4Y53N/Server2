@@ -46,9 +46,7 @@ class Connection:
                 self.__reset()
                 logging.info('Waiting Client Connect...')
                 client, address = self.__server_sock.accept()
-            except timeout:
-                continue
-            except (OSError, KeyboardInterrupt, Exception) as E:
+            except (OSError, KeyboardInterrupt, timeout, Exception) as E:
                 logging.error(E.__class__.__name__, exc_info=True)
                 self.close()
             else:
