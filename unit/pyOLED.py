@@ -102,7 +102,7 @@ class pyOLED:
         )
 
     def __calc_padding(self, text: str):
-        return (self.__width - self.__draw.textsize(text)) / 2
+        return (self.__width - self.__draw.textsize(text)[0]) / 2
 
     def __calc_time(self, t1: float, t2: float) -> str:
         if t1 > t2:
