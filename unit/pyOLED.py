@@ -9,22 +9,22 @@ class pyOLED:
 
     def __init__(self, connection: Connection) -> None:
         self.__connection = connection
-        self.__server_activate_time = time()
-        self.__client_activate_time = None
-        self.__server_addr = self.__connection.get_server_address()
-        self.__client_addr = None
         self.__display = SSD1306_128_32(rst=None, i2c_bus=1, gpio=1)
         self.__display.begin()
         self.__display.clear()
         self.__display.display()
+        self.__server_activate_time = time()
+        self.__client_activate_time = None
+        self.__server_addr = self.__connection.get_server_address()
+        self.__client_addr = None
         self.__delay = 1 / 4
         self.__time_fmt = '%H:%M:%S'
-        self.__x_time_padding = self.__calc_padding('00:00:00')
         self.__width = self.__display.width
         self.__height = self.__display.height
-        self.__font = ImageFont.load_default()
         self.__image = Image.new('1', (self.__width, self.__height))
+        self.__font = ImageFont.load_default()
         self.__draw = ImageDraw.Draw(self.__image)
+        self.__x_time_padding = self.__calc_padding('00:00:00')
         self.__thread = Thread(target=self.__loop, daemon=True)
 
     def activate(self):
