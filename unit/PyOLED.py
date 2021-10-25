@@ -38,7 +38,7 @@ class PyOLED:
             self.__thread.start()
 
     def __loop(self):
-        while self.__connection.is_alive():
+        while self.__connection.is_connect():
             self.__update()
             self.__display.image(self.__image)
             self.__display.display()
