@@ -15,7 +15,7 @@ class Connection:
         self.__connection_kword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
-        self.__server_sock.settimeout(300)
+        self.__server_sock.settimeout(3)
         self.__server_sock.listen(1)
         server_address = self.__server_sock.getsockname()
         self.__server_address = ':'.join((server_address[0], str(server_address[1])))
@@ -46,7 +46,9 @@ class Connection:
                 self.__reset()
                 logging.info('Waiting Client Connect...')
                 client, address = self.__server_sock.accept()
-            except (OSError, KeyboardInterrupt, timeout, Exception) as E:
+            except timeout:
+                continue
+            except (OSError, KeyboardInterrupt, Exception) as E:
                 logging.error(E.__class__.__name__, exc_info=True)
                 self.close()
             else:
@@ -157,8 +159,8 @@ class Connection:
 
     def close(self):
         self.__is_connect = False
-        self.__clear_buffer()
         self.__server_sock.close()
+        self.__clear_buffer()
 
     def get(self) -> dict:
         try:
