@@ -6,8 +6,8 @@ from unit.Connection import Connection
 from unit.pyOLED import pyOLED
 from unit.Detector import Detector
 from multiprocessing import Pool, cpu_count, TimeoutError
-from utils.Frames import FRAME, SYS_INFO, CONFIGS, CONFIG
-from utils.util import get_hostname
+from unit.utils.Frames import FRAME, SYS_INFO, CONFIGS, CONFIG
+from unit.utils.util import get_hostname
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s',

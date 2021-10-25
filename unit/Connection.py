@@ -4,7 +4,7 @@ from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
-from ..utils.Frames import RESET
+from utils.Frames import RESET
 
 
 class Connection:
@@ -59,8 +59,7 @@ class Connection:
         logging.info(
             f'Client Connect Address => {self.__cliet_address}')
         client.settimeout(3)
-        recv_thread = Thread(target=self.__listening,
-                             args=(client), daemon=True)
+        recv_thread = Thread(target=self.__listening, args=(client), daemon=True)
         send_thread = Thread(target=self.__sending, args=(client), daemon=True)
         recv_thread.start()
         send_thread.start()

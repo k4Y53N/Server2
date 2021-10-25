@@ -1,12 +1,8 @@
-from utils.util import nowait
-from .Connection import Connection
+from Connection import Connection
 from PIL import Image, ImageDraw, ImageFont
 from Adafruit_SSD1306 import SSD1306_128_32
 from time import sleep, time, gmtime, strftime
 from threading import Thread
-
-
-# def calc_padding(img_w, msg_size): return (img_w - msg_size) / 2
 
 
 class pyOLED:
@@ -115,76 +111,3 @@ class pyOLED:
 
     def is_alive(self):
         return self.__thread.is_alive()
-
-# class pioled:
-#     def __init__(self):
-#         self.__disp = Adafruit_SSD1306.SSD1306_128_32(rst=None, i2c_bus=1, gpio=1)
-#         self.__disp.begin()
-#         self.__disp.clear()
-#         self.__disp.display()
-#         self.__width = self.__disp.width
-#         self.__height = self.__disp.height
-#         self.__font = ImageFont.load_default()
-#         self.__img = Image.new('1', (self.__width, self.__height))
-#         self.__draw = ImageDraw.Draw(self.__img)
-#         self.__thread = threading.Thread(target=self.__oled_loop, daemon=True)
-#         self.__is_show_oled = True
-#         self.__oled_delay = 1
-#         self.__uptime = None
-#         self.__server_address = None
-#         self.__client_address = None
-#         self.__client_uptime = None
-#         self.time_Xpading = cal_padding(self.__width, self.__draw.textsize('00:00:00')[0])
-#         self.sip_Xpading = 0
-#         self.cip_Xpading = cal_padding(self.__width, self.__draw.textsize('None')[0])
-
-#     def start(self, address: str):
-#         self.__server_address = address
-#         self.__uptime = time.time()
-#         self.sip_Xpading = cal_padding(self.__width, self.__draw.textsize(address)[0])
-#         try:
-#             if not self.__thread.is_alive():
-#                 self.__thread.start()
-#         except RuntimeError:
-#             self.__thread = threading.Thread(target=self.__oled_loop, daemon=True)
-#             self.__thread.start()
-
-#     def __oled_loop(self):
-#         self.__is_show_oled = True
-#         while self.__is_show_oled:
-#             self.__set_content()
-#             self.__disp.image(self.__img)
-#             self.__disp.display()
-#             time.sleep(self.__oled_delay)
-
-#     def __set_content(self):
-#         t = int(time.time())
-#         self.__draw.rectangle((0, 0, self.__width, self.__height), outline=0, fill=0)
-#         self.__draw.text((self.sip_Xpading, -2), self.__server_address, fill=255, font=self.__font)
-#         suptime = time.strftime('%H:%M:%S', time.gmtime(t - self.__uptime))
-#         self.__draw.text((self.time_Xpading, 6), suptime, fill=255, font=self.__font)
-
-#         if self.__client_address:
-#             self.__draw.text((self.cip_Xpading, 14), self.__client_address, fill=255, font=self.__font)
-#             cuptime = time.strftime('%H:%M:%S', time.gmtime(t - self.__client_uptime))
-#             self.__draw.text((self.time_Xpading, 22), cuptime, fill=255, font=self.__font)
-#         else:
-#             self.__draw.text((self.cip_Xpading, 14), 'None', fill=255, font=self.__font)
-#             cuptime = time.strftime('%H:%M:%S', time.gmtime(0))
-#             self.__draw.text((self.time_Xpading, 22), cuptime, fill=255, font=self.__font)
-
-#     def reset(self):
-#         self.__client_address = None
-#         self.__client_uptime = None
-#         self.cip_Xpading = cal_padding(self.__width, self.__draw.textsize('None')[0])
-
-#     def set_client(self, address: str):
-#         self.__client_address = address
-#         self.__client_uptime = time.time()
-#         self.cip_Xpading = cal_padding(self.__width, self.__draw.textsize(address)[0])
-
-#     def close(self):
-#         self.__is_show_oled = False
-#         self.__disp.clear()
-#         self.__disp.display()
-#         self.__thread.join(1)
