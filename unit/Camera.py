@@ -45,7 +45,7 @@ class Camera:
         self.__grabbed, self.__image = False, None
         self.__streaming = True
         self.__is_stream = False
-        self.__thread = Thread(target=self.__loop, daemon=True)
+        self.__thread = Thread(target=self.__loop)
 
         if self.__cap.isOpened():
             self.__FPS = self.__cap.get(cv2.CAP_PROP_FPS)

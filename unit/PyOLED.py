@@ -25,7 +25,7 @@ class PyOLED:
         self.__font = ImageFont.load_default()
         self.__draw = ImageDraw.Draw(self.__image)
         self.__x_time_padding = self.__calc_padding('00:00:00')
-        self.__thread = Thread(target=self.__loop, daemon=True)
+        self.__thread = Thread(target=self.__loop)
 
     def activate(self):
         if self.__thread.is_alive():
@@ -34,7 +34,7 @@ class PyOLED:
         try:
             self.__thread.start()
         except RuntimeError:
-            self.__thread = Thread(target=self.__loop, daemon=True)
+            self.__thread = Thread(target=self.__loop)
             self.__thread.start()
 
     def __loop(self):
@@ -60,7 +60,9 @@ class PyOLED:
         sleep(self.__delay)
 
     def __close(self):
-        pass
+        self.__display.clear()
+        self.__display.display()
+        self.__display.reset()
 
     def __draw_server(self, nowtime: float):
         x = self.__calc_padding(self.__server_addr)

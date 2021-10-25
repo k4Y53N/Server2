@@ -121,7 +121,7 @@ class Server:
     def close(self, command: dict = {}):
         self.__camera.close()
         self.__connection.close()
-        self.__detector.close()
+        # self.__detector.close()
 
     def __exit(self, command: dict = {}, *args, **kwargs):
         pass
