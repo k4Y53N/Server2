@@ -3,7 +3,7 @@ from threading import Thread
 from time import process_time, sleep, time
 from unit.Camera import Camera
 from unit.Connection import Connection
-from unit.pyOLED import pyOLED
+from unit.PyOLED import PyOLED
 from unit.Detector import Detector
 from multiprocessing import Pool, cpu_count, TimeoutError
 from unit.utils.Frames import FRAME, SYS_INFO, CONFIGS, CONFIG
@@ -23,7 +23,7 @@ class Server:
         self.__detector = Detector()
         self.__camera = Camera()
         self.__connection = Connection(get_hostname())
-        self.__pyoled = pyOLED(self.__connection)
+        self.__pyoled = PyOLED(self.__connection)
         # self.__is_infer = False
         self.__camera.activate()
         self.__connection.activate()

@@ -5,7 +5,7 @@ from time import sleep, time, gmtime, strftime
 from threading import Thread
 
 
-class pyOLED:
+class PyOLED:
 
     def __init__(self, connection: Connection) -> None:
         self.__connection = connection
@@ -48,6 +48,7 @@ class pyOLED:
 
     def __update(self):
         t = time()
+        self.__draw.rectangle((0, 0, self.__width, self.__height), fill=0)
         client_address = self.__connection.get_client_address()
 
         if client_address != self.__client_addr:
