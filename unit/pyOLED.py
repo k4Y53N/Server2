@@ -10,7 +10,7 @@ class pyOLED:
     def __init__(self, connection: Connection) -> None:
         self.__connection = connection
         self.__server_activate_time = time()
-        self.__client_activate_time = None()
+        self.__client_activate_time = None
         self.__server_addr = self.__connection.get_server_address()
         self.__client_addr = None
         self.__display = SSD1306_128_32(rst=None, i2c_bus=1, gpio=1)
