@@ -5,7 +5,6 @@ from base64 import b64encode
 from time import time, sleep
 from threading import Thread
 
-
 _width = 1280
 _height = 720
 
@@ -19,22 +18,22 @@ def gstreamer_pipeline(
         flip_method=0,
 ):
     return (
-        "nvarguscamerasrc ! "
-        "video/x-raw(memory:NVMM), "
-        "width=(int)%d, height=(int)%d, "
-        "format=(string)NV12, framerate=(fraction)%d/1 ! "
-        "nvvidconv flip-method=%d ! "
-        "video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
-        "videoconvert ! "
-        "video/x-raw, format=(string)BGR ! appsink"
-        % (
-            capture_width,
-            capture_height,
-            framerate,
-            flip_method,
-            display_width,
-            display_height,
-        )
+            "nvarguscamerasrc ! "
+            "video/x-raw(memory:NVMM), "
+            "width=(int)%d, height=(int)%d, "
+            "format=(string)NV12, framerate=(fraction)%d/1 ! "
+            "nvvidconv flip-method=%d ! "
+            "video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
+            "videoconvert ! "
+            "video/x-raw, format=(string)BGR ! appsink"
+            % (
+                capture_width,
+                capture_height,
+                framerate,
+                flip_method,
+                display_width,
+                display_height,
+            )
     )
 
 
@@ -115,7 +114,7 @@ class Camera:
         self.__width = width
         self.__height = height
 
-    def set_stream(self, command = {}, *args, **kwargs):
+    def set_stream(self, command={}, *args, **kwargs):
         pass
 
     def get_resolution(self):

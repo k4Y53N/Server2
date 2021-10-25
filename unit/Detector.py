@@ -1,19 +1,11 @@
 import sys
+
 sys.path.append('./')
 import json
-from utils.Frames import CONFIGS
-from threading import Lock
+from ..utils.Frames import CONFIGS
 from pathlib import Path
-import logging
-import os
 import numpy as np
-import cv2
-
-# import tensorflow as tf
-# from core.yolov4 import YOLO, decode, filter_boxes
-# import core.utils as utils
-from utils.util import nowait
-# from utils.Frames import CONFIG
+from ..utils.util import nowait
 
 configs_dir = Path('./configs')
 file_endname = '*.json'
@@ -27,7 +19,6 @@ class Detector:
         configs = CONFIGS.copy()
 
         for path in configs_dir.glob(file_endname):
-
             with path.open() as f:
                 config = json.load(f)
 
@@ -72,7 +63,6 @@ if __name__ == '__main__':
     # det = Detector()
     # with open('./utils/CONFIGS.json', 'w') as f:
     #     json.dump(det.get_configs({}), f)
-
 
 # class Detector:
 #     def __init__(self):

@@ -1,18 +1,10 @@
-import sys
-sys.path.append('./')
 import logging
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
-from utils.Frames import RESET
-
-logging.basicConfig(
-    format='%(asctime)s %(levelname)s:%(message)s',
-    datefmt='%Y/%m/%d %H:%M:%S',
-    level=logging.INFO
-)
+from ..utils.Frames import RESET
 
 
 class Connection:
@@ -27,8 +19,7 @@ class Connection:
         self.__server_sock.settimeout(300)
         self.__server_sock.listen(1)
         server_address = self.__server_sock.getsockname()
-        self.__server_address = ':'.join(
-            (server_address[0], str(server_address[1])))
+        self.__server_address = ':'.join((server_address[0], str(server_address[1])))
         self.__cliet_address = None
         self.__send_lock = Lock()
         self.__input_buffer = Queue()
@@ -203,6 +194,7 @@ class Connection:
 
 
 if __name__ == '__main__':
-    from utils.util import get_hostname
+    from ..utils.util import get_hostname
+
     connection = Connection(get_hostname())
     connection.activate()

@@ -1,5 +1,5 @@
 from utils.util import nowait
-from Connection import Connection
+from .Connection import Connection
 from PIL import Image, ImageDraw, ImageFont
 from Adafruit_SSD1306 import SSD1306_128_32
 from time import sleep, time, gmtime, strftime
@@ -21,7 +21,7 @@ class pyOLED:
         self.__display.begin()
         self.__display.clear()
         self.__display.display()
-        self.__delay = 1/4
+        self.__delay = 1 / 4
         self.__time_fmt = '%H:%M:%S'
         self.__x_time_padding = self.__calc_padding('00:00:00')
         self.__width = self.__display.width
@@ -47,7 +47,7 @@ class pyOLED:
             self.__display.image(self.__image)
             self.__display.display()
             sleep(self.__delay)
-            
+
         self.__close()
 
     def __update(self):
@@ -116,9 +116,6 @@ class pyOLED:
     def is_alive(self):
         return self.__thread.is_alive()
 
-
-
-        
 # class pioled:
 #     def __init__(self):
 #         self.__disp = Adafruit_SSD1306.SSD1306_128_32(rst=None, i2c_bus=1, gpio=1)

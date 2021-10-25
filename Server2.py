@@ -1,5 +1,4 @@
-from logging import info
-from os import name
+import logging
 from threading import Thread
 from time import process_time, sleep, time
 from unit.Camera import Camera
@@ -9,6 +8,13 @@ from unit.Detector import Detector
 from multiprocessing import Pool, cpu_count, TimeoutError
 from utils.Frames import FRAME, SYS_INFO, CONFIGS, CONFIG
 from utils.util import get_hostname
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s:%(message)s',
+    datefmt='%Y/%m/%d %H:%M:%S',
+    level=logging.INFO
+)
+
 CPUS = cpu_count()
 
 
@@ -79,7 +85,7 @@ class Server:
             jpg = jpg_result.get()
             frame['BBOX'] = infer
             frame['IMAGE'] = jpg
-        except:
+        except Exception:
             return
 
         self.__connection.put(frame)
@@ -99,7 +105,7 @@ class Server:
         try:
             jpg = jpg_result.get()
             frame['IMAGE'] = jpg
-        except:
+        except Exception:
             return
 
         self.__connection.put(frame)
