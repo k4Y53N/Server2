@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 import numpy as np
-from utils.util import nowait
-from utils.Frames import CONFIGS
+from .utils.util import nowait
+from .utils.Frames import CONFIGS
 
 configs_dir = Path('./configs')
 file_endname = '*.json'
