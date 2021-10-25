@@ -15,7 +15,6 @@ class Connection:
         self.__connection_kword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
-        self.__server_sock.setblocking(True)
         self.__server_sock.settimeout(300)
         self.__server_sock.listen(1)
         server_address = self.__server_sock.getsockname()
@@ -59,8 +58,8 @@ class Connection:
         logging.info(
             f'Client Connect Address => {self.__cliet_address}')
         client.settimeout(3)
-        recv_thread = Thread(target=self.__listening, args=(client), daemon=True)
-        send_thread = Thread(target=self.__sending, args=(client), daemon=True)
+        recv_thread = Thread(target=self.__listening, args=(client,), daemon=True)
+        send_thread = Thread(target=self.__sending, args=(client,), daemon=True)
         recv_thread.start()
         send_thread.start()
         recv_thread.join()
@@ -157,7 +156,7 @@ class Connection:
         pass
 
     def close(self):
-        self.is_connect = False
+        self.__is_connect = False
         self.__clear_buffer()
         self.__server_sock.close()
 
