@@ -4,7 +4,7 @@ from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
-from utils.Frames import RESET
+from .utils.Frames import RESET
 
 
 class Connection:
