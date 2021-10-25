@@ -48,10 +48,11 @@ class Server:
 
         try:
             self.__thread.start()
-            self.__thread.join()
         except RuntimeError:
             self.__thread = Thread(target=self.__loop, daemon=True)
             self.__thread.start()
+            self.__thread.join()
+        else:
             self.__thread.join()
 
     def __loop(self):
