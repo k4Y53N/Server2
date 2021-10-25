@@ -178,5 +178,5 @@ if __name__ == '__main__':
         server = Server()
         server.activate()
     except KeyboardInterrupt as e:
-        logging.info(e.__class__.__name__, exc_info=True)
+        logging.error(e.__class__.__name__, exc_info=True)
         server.close()
