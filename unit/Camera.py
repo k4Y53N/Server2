@@ -14,7 +14,7 @@ def gstreamer_pipeline(
         capture_height=_height,
         display_width=_width,
         display_height=_height,
-        framerate=60,
+        framerate=59.,
         flip_method=0,
 ):
     return (
