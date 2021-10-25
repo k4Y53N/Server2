@@ -24,7 +24,6 @@ class Server:
         self.__camera = Camera()
         self.__connection = Connection(get_hostname())
         self.__pyoled = PyOLED(self.__connection)
-        # self.__is_infer = False
         self.__camera.activate()
         self.__connection.activate()
         self.__pyoled.activate()
@@ -79,7 +78,9 @@ class Server:
         with Pool(processes=CPUS) as pool:
             infer_result = pool.apply_async(self.__detector.detect, (image,))
             jpg_result = pool.apply_async(
-                self.__camera.get_JPG_base64, (image))
+                self.__camera.get_JPG_base64,
+                (image,)
+            )
 
         try:
             infer = infer_result.get()
@@ -101,7 +102,8 @@ class Server:
 
         with Pool(processes=CPUS) as pool:
             jpg_result = pool.apply_async(
-                self.__camera.get_JPG_base64, (image))
+                self.__camera.get_JPG_base64, (image,)
+            )
 
         try:
             jpg = jpg_result.get()
@@ -177,6 +179,6 @@ if __name__ == '__main__':
     try:
         server = Server()
         server.activate()
-    except KeyboardInterrupt as e:
+    except (KeyboardInterrupt, Exception) as e:
         logging.error(e.__class__.__name__, exc_info=True)
         server.close()
