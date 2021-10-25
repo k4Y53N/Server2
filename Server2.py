@@ -120,6 +120,7 @@ class Server:
 
     def close(self, command: dict = {}):
         self.__camera.close()
+        self.__connection.close()
         self.__detector.close()
 
     def __exit(self, command: dict = {}, *args, **kwargs):
@@ -175,5 +176,5 @@ if __name__ == '__main__':
     try:
         server = Server()
         server.activate()
-    except Exception:
+    except KeyboardInterrupt:
         server.close()

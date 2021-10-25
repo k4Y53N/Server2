@@ -49,7 +49,7 @@ class Connection:
                 client, address = self.__server_sock.accept()
             except (OSError, KeyboardInterrupt, timeout, Exception) as E:
                 logging.error(E.__class__.__name__, exc_info=True)
-                self.__close()
+                self.close()
             else:
                 self.__handle_client(client, ip=address[0], port=address[1])
                 client.close()
@@ -156,7 +156,7 @@ class Connection:
     def __exit(self):
         pass
 
-    def __close(self):
+    def close(self):
         self.is_connect = False
         self.__clear_buffer()
         self.__server_sock.close()
@@ -193,7 +193,7 @@ class Connection:
 
 
 if __name__ == '__main__':
-    from ..utils.util import get_hostname
+    from .utils.util import get_hostname
 
     connection = Connection(get_hostname())
     connection.activate()
