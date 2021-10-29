@@ -5,11 +5,16 @@ from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
 from .utils.Frames import RESET
+from typing import Union, Any, Tuple, Text
 
 
 class Connection:
 
-    def __init__(self, ip: str = 'localhost', port: int = 0):
+    def __init__(self, ip: str = 'localhost', port: int = 0) -> None:
+        """
+
+        :rtype: object
+        """
         self.__format = 'utf-8'
         self.__header_size = calcsize('>i')
         self.__connection_kword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
@@ -17,9 +22,8 @@ class Connection:
         self.__server_sock.bind((ip, port))
         self.__server_sock.settimeout(3)
         self.__server_sock.listen(1)
-        server_address = self.__server_sock.getsockname()
-        self.__server_address = ':'.join((server_address[0], str(server_address[1])))
-        self.__cliet_address = None
+        self.__server_address = self.__server_sock.getsockname()
+        self.__client_address = None
         self.__send_lock = Lock()
         self.__input_buffer = Queue()
         self.__output_buffer = Queue()
@@ -38,8 +42,7 @@ class Connection:
             self.__thread.start()
 
     def __loop(self):
-        logging.info(
-            f'Connection Server Address => {self.__server_address}')
+        logging.info(f'Connection Server Address => {self.__server_address}')
 
         while self.__is_connect:
             try:
@@ -50,13 +53,12 @@ class Connection:
                 logging.error(E.__class__.__name__, exc_info=True)
                 self.close()
             else:
-                self.__handle_client(client, ip=address[0], port=address[1])
+                self.__handle_client(client, address)
                 client.close()
 
-    def __handle_client(self, client: socket, ip: str, port: int):
-        self.__cliet_address = ':'.join((ip, str(port)))
-        logging.info(
-            f'Client Connect Address => {self.__cliet_address}')
+    def __handle_client(self, client: socket, address: Tuple[str, int]):
+        self.__client_address = address
+        logging.info(f'Client Connect Address => {address[0]}:{address[1]}')
         client.settimeout(3)
         recv_thread = Thread(target=self.__listening, args=(client,), daemon=True)
         send_thread = Thread(target=self.__sending, args=(client,), daemon=True)
@@ -69,16 +71,15 @@ class Connection:
     def __listening(self, client: socket):
         while self.__is_client_connect:
             try:
-                message = self.__recv_message(client)
+                message, address = self.__recv_message(client), client.getsockname()
                 if message['CMD'] in self.__connection_kword:
                     self.__normal_disconnect(client, message)
                 else:
-                    self.__input_buffer.put(message, True, 0.2)
+                    self.__input_buffer.put((message, address), True, 0.2)
             except Full:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                logging.error(
-                    f'Receive Thread Error => {E.__class__.__name__}', exc_info=True)
+                logging.error(f'Receive Thread Error => {E.__class__.__name__}', exc_info=True)
                 self.__non_normal_disconnect(client)
 
     def __recv_message(self, client: socket) -> dict:
@@ -102,26 +103,28 @@ class Connection:
     def __sending(self, client: socket):
         while self.__is_client_connect:
             try:
-                msg_bytes = self.__output_buffer.get(True, 0.2)
-                self.__send_msg_bytes(client, msg_bytes)
+                msg_bytes, address = self.__output_buffer.get(True, 0.2)
+                if address != client.getsockname():
+                    continue
+                self.__send_message(client, msg_bytes)
             except Empty:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                logging.error(
-                    f'Send Thread Error => {E.__class__.__name__}', exc_info=True)
+                logging.error(f'Send Thread Error => {E.__class__.__name__}', exc_info=True)
                 self.__non_normal_disconnect(client)
 
-    def __send_msg_bytes(self, client: socket, msg_bytes: bytearray):
+    def __send_message(self, client: socket, message: dict):
         with self.__send_lock:
-            header_bytes = pack('>i', len(msg_bytes))
+            message = dumps(message).encode(self.__format)
+            header_bytes = pack('>i', len(message))
             self.__send_all(client, header_bytes)
-            self.__send_all(client, msg_bytes)
+            self.__send_all(client, message)
 
-    def __send_all(self, client: socket, bytes: bytearray):
+    def __send_all(self, client: socket, _bytes: bytes):
         total_send = 0
 
-        while total_send > len(bytes):
-            sent = client.send(bytes[total_send:])
+        while total_send > len(_bytes):
+            sent = client.send(_bytes[total_send:])
             if not sent:
                 raise RuntimeError('Socket sending bytes fail')
             total_send += sent
@@ -135,10 +138,7 @@ class Connection:
     def __reset(self):
         self.__clear_buffer()
         self.__is_client_connect = True
-        self.__cliet_address = None
-        reset = RESET.copy()
-        self.__input_buffer.put(reset)
-        # TODO: put reset dict to buffer
+        self.__client_address = None
 
     def __clear_buffer(self):
         with self.__input_buffer.mutex:
@@ -160,29 +160,25 @@ class Connection:
         self.__server_sock.close()
         self.__clear_buffer()
 
-    def get(self) -> dict:
+    def get(self) -> Tuple[dict, Tuple[str, int]]:
         try:
             message = self.__input_buffer.get()
         except Empty:
-            return None
+            return dict(), self.__client_address
         else:
-            return message
+            return message, self.__client_address
 
-    def put(self, message: dict):
-        if not self.__is_client_connect:
-            return
-
+    def put(self, message: dict, address: Tuple[str, int]):
         try:
-            msg_bytes = dumps(message).encode(self.__format)
-            self.__output_buffer.put(msg_bytes, True, 0.2)
+            self.__output_buffer.put((message, address), True, 0.2)
         except Full:
             return
 
-    def get_server_address(self) -> str:
+    def get_server_address(self) -> Tuple[str, int]:
         return self.__server_address
 
-    def get_client_address(self) -> str:
-        return self.__cliet_address
+    def get_client_address(self) -> Union[Tuple[str, int], None]:
+        return self.__client_address
 
     def is_connect(self) -> bool:
         return self.__is_connect

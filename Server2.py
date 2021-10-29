@@ -8,6 +8,7 @@ from unit.Detector import Detector
 from multiprocessing import Pool, cpu_count, TimeoutError
 from unit.utils.Frames import FRAME, SYS_INFO, CONFIGS, CONFIG
 from unit.utils.util import get_hostname
+from typing import Tuple
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s',
@@ -19,6 +20,7 @@ CPUS = cpu_count()
 
 
 class Server:
+
     def __init__(self) -> None:
         self.__detector = Detector()
         self.__camera = Camera()
@@ -55,10 +57,14 @@ class Server:
             self.__thread.join()
 
     def __loop(self):
+        current_address = self.__connection.get_client_address()
         while self.__connection.is_connect():
-            command = self.__connection.get()
-            if command['CMD'] in self.__func_map.keys():
-                self.__func_map[command['CMD']](command)
+            command, address = self.__connection.get()
+            if address != current_address:
+                self.__reset()
+                continue
+            if command.get('CMD', None) in self.__func_map.keys():
+                self.__func_map[command['CMD']](command, address)
 
     def __streaming(self):
         while self.__camera.is_stream():
@@ -74,7 +80,7 @@ class Server:
     def __vid_encode_infer(self, image):
         start = time()
         frame = FRAME.copy()
-
+        address = self.__connection.get_client_address()
         with Pool(processes=CPUS) as pool:
             infer_result = pool.apply_async(self.__detector.detect, (image,))
             jpg_result = pool.apply_async(
@@ -90,7 +96,7 @@ class Server:
         except Exception:
             return
 
-        self.__connection.put(frame)
+        self.__connection.put(frame, address)
         process_time = time() - start
 
         if process_time < self.__camera.delay():
@@ -99,7 +105,7 @@ class Server:
     def __vid_encode(self, image):
         start = time()
         frame = FRAME.copy()
-
+        adress = self.__connection.get_client_address()
         with Pool(processes=CPUS) as pool:
             jpg_result = pool.apply_async(
                 self.__camera.get_JPG_base64, (image,)
@@ -111,35 +117,35 @@ class Server:
         except Exception:
             return
 
-        self.__connection.put(frame)
+        self.__connection.put(frame, adress)
         process_time = time() - start
 
         if process_time < self.__camera.delay():
             sleep(self.__camera.delay() - process_time)
 
-    def __reset(self, command: dict = {}, *args, **kwargs):
+    def __reset(self):
         self.__camera.reset()
         self.__detector.reset()
 
-    def close(self, command: dict = {}):
+    def close(self):
         self.__camera.close()
         self.__connection.close()
         # self.__detector.close()
 
-    def __exit(self, command: dict = {}, *args, **kwargs):
+    def __exit(self):
         pass
 
-    def __shutdown(self, command: dict = {}, *args, **kwargs):
+    def __shutdown(self):
         pass
 
-    def __get_sys_info(self, command: dict = {}, *args, **kwargs):
+    def __get_sys_info(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         info = SYS_INFO.copy()
         info['IS_INFER'] = self.__detector.is_infer()
         info['IS_STREAM'] = self.__camera.is_stream()
         info['WIDTH'], info['HEIGHT'] = self.__camera.get_resolution()
-        self.__connection.put(info)
+        self.__connection.put(info, address)
 
-    def __set_stream(self, command: dict = {}, *args, **kwargs):
+    def __set_stream(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         self.__camera.set_stream(command)
 
         if self.__camera.is_stream():
@@ -152,26 +158,26 @@ class Server:
                     target=self.__streaming, daemon=True)
                 self.__stream_thread.start()
 
-    def __get_configs(self, command: dict = {}, *args, **kwargs):
+    def __get_configs(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         configs = CONFIGS.copy()
         configs.update(self.__detector.get_configs())
-        self.__connection.put(configs)
+        self.__connection.put(configs, address)
 
-    def __get_config(self, command: dict = {}, *args, **kwargs):
+    def __get_config(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         config = CONFIG.copy()
         config.update(self.__detector.get_config())
-        self.__connection.put(config)
+        self.__connection.put(config, address)
 
-    def __set_config(self, command: dict = {}, *args, **kwargs):
+    def __set_config(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         self.__detector.set_config(config=command)
 
-    def __set_infer(self, command: dict = {}, *args, **kwargs):
+    def __set_infer(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         self.__detector.set_infer(command)
 
-    def __set_resolution(self, command: dict = {}, *args, **kwargs):
+    def __set_resolution(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         self.__camera.set_resolution(command)
 
-    def __move(self, command, *args, **kwargs):
+    def __move(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         pass
 
 

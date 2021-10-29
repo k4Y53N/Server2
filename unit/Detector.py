@@ -15,11 +15,11 @@ class Detector:
     def get_configs(self, command: dict = {}, *args, **kwargs) -> dict:
         configs = CONFIGS.copy()
 
-        for path in configs_dir.glob(file_endname):
-            with path.open() as f:
+        for PATH in configs_dir.glob(file_endname):
+            with PATH.open() as f:
                 config = json.load(f)
 
-            configs['CONFIGS'][path.name] = {
+            configs['CONFIGS'][PATH.name] = {
                 'SIZE': config['size'],
                 'MODEL_TYPE': config['model_type'],
                 'TINY': config['tiny'],

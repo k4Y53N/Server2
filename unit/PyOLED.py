@@ -16,7 +16,7 @@ class PyOLED:
         self.__server_activate_time = time()
         self.__client_activate_time = None
         self.__server_addr = self.__connection.get_server_address()
-        self.__client_addr = None
+        self.__client_addr = self.__connection.get_client_address()
         self.__delay = 1 / 4
         self.__time_fmt = '%H:%M:%S'
         self.__width = self.__display.width
@@ -64,15 +64,16 @@ class PyOLED:
         self.__display.display()
         self.__display.reset()
 
-    def __draw_server(self, nowtime: float):
-        x = self.__calc_padding(self.__server_addr)
+    def __draw_server(self, now_time: float):
+        server_address_str = ':'.join((self.__server_addr[0], self.__server_addr[1]))
+        x = self.__calc_padding(server_address_str)
         self.__draw.text(
             (x, -2),
-            self.__server_addr,
+            server_address_str,
             fill=255,
             font=self.__font
         )
-        s_uptime_txt = self.__calc_time(self.__server_activate_time, nowtime)
+        s_uptime_txt = self.__calc_time(self.__server_activate_time, now_time)
         self.__draw.text(
             (self.__x_time_padding, 6),
             s_uptime_txt,
@@ -80,22 +81,21 @@ class PyOLED:
             font=self.__font
         )
 
-    def __draw_client(self, nowtime: float):
+    def __draw_client(self, now_time: float):
+        if self.__client_addr:
+            client_address_str = ':'.join((self.__client_addr[0], self.__client_addr[1]))
+            c_uptime_txt = self.__calc_time(self.__client_activate_time, now_time)
+        else:
+            client_address_str = 'None'
+            c_uptime_txt = self.__calc_time(0, 0)
 
-        x = self.__calc_padding(f'{self.__client_addr}')
+        x = self.__calc_padding(client_address_str)
         self.__draw.text(
             (x, 14),
-            f'{self.__client_addr}',
+            client_address_str,
             fill=255,
             font=self.__font
         )
-
-        c_uptime_txt = None
-        if self.__client_addr:
-            c_uptime_txt = self.__calc_time(
-                self.__client_activate_time, nowtime)
-        else:
-            c_uptime_txt = self.__calc_time(0, 0)
 
         self.__draw.text(
             (self.__x_time_padding, 22),
