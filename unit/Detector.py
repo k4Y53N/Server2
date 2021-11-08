@@ -45,8 +45,11 @@ class Detector:
     def infer_thread(self, dest_dic: dict, dic_key: str, image, *args):
         return Thread(target=self.infer, args=args)
 
-    def infer(self ,dest_dic: dict, dic_key: str, image: np.ndarray, *args):
-        dest_dic[dic_key] = self.detect(image)
+    def infer(self, dest_dic: dict, dic_key: str, image: np.ndarray, *args):
+        try:
+            dest_dic[dic_key] = self.detect(image)
+        except:
+            dest_dic[dic_key] = []
 
     def detect(self, image):
         pass

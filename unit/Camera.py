@@ -93,10 +93,13 @@ class Camera:
         self.__grabbed, self.__image = False, None
     
     def encode_thread(self, dest_dic: dict, dic_key: str, image, *args) -> Thread:
-        return Thread(target=self.encode_thread, args=args)
+        return Thread(target=self.encode, args=args)
 
     def encode(self, dest_dic: dict, dic_key: str, image, *args):
-        dest_dic[dic_key] = self.get_JPG_base64(image)
+        try:
+            dest_dic[dic_key] = self.get_JPG_base64(image)
+        except:
+            dest_dic[dic_key] = None
 
     def get_JPG_base64(self, image: np.ndarray) -> str:
         if image.shape != (self.__width, self.__height, 3):

@@ -1,12 +1,10 @@
 import logging
 from threading import Thread
-from time import process_time, sleep, time
-from PIL.Image import Image
+from time import sleep 
 from unit.Camera import Camera
 from unit.Connection import Connection
 from unit.PyOLED import PyOLED
 from unit.Detector import Detector
-from multiprocessing import Pool, cpu_count, TimeoutError
 from unit.utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
 from unit.utils.util import get_hostname
 from typing import Tuple
@@ -16,9 +14,6 @@ logging.basicConfig(
     datefmt='%Y/%m/%d %H:%M:%S',
     level=logging.INFO
 )
-
-CPUS = cpu_count()
-
 
 class Server:
 
@@ -116,7 +111,7 @@ class Server:
     def close(self):
         self.__camera.close()
         self.__connection.close()
-        # self.__detector.close()
+        self.__detector.close()
 
     def __exit(self):
         pass
