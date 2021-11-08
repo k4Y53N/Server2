@@ -1,14 +1,13 @@
 import logging
 from threading import Thread
 from time import process_time, sleep, time
-
 from PIL.Image import Image
 from unit.Camera import Camera
 from unit.Connection import Connection
 from unit.PyOLED import PyOLED
 from unit.Detector import Detector
 from multiprocessing import Pool, cpu_count, TimeoutError
-from unit.utils.Frames import FRAME, SYS_INFO, CONFIGS, CONFIG
+from unit.utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
 from unit.utils.util import get_hostname
 from typing import Tuple
 
@@ -96,10 +95,19 @@ class Server:
                 self.__connection.put(ret, address)
 
     def __vid_encode_infer(self, image) -> dict:
-        pass
+        frame = FRAME.copy()
+        encode_thread = self.__camera.encode_thread(frame, 'IMAGE', image)
+        infer_thread = self.__detector.infer_thread(frame, 'BBOX', image)
+        encode_thread.start()
+        infer_thread.start()
+        encode_thread.join()
+        infer_thread.join()
+        return frame
 
     def __vid_encode(self, image) -> dict:
-        pass
+        frame = FRAME.copy()
+        self.__camera.encode(frame, 'IMAGE', image)        
+        return frame
 
     def __reset(self):
         self.__camera.reset()

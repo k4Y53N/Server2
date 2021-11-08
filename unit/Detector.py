@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
 import numpy as np
-from .utils.util import nowait
-from .utils.Frames import CONFIGS
+from threading import Thread
+from utils.util import nowait
+from utils.Commands import CONFIGS
+
 
 configs_dir = Path('./configs')
 file_endname = '*.json'
@@ -40,8 +42,15 @@ class Detector:
     def is_client_infer(self):
         return self.__is_client_infer
 
-    def detect(self, image: np.ndarray):
+    def infer_thread(self, dest_dic: dict, dic_key: str, image, *args):
+        return Thread(target=self.infer, args=args)
+
+    def infer(self ,dest_dic: dict, dic_key: str, image: np.ndarray, *args):
+        dest_dic[dic_key] = self.detect(image)
+
+    def detect(self, image):
         pass
+    
 
     @nowait
     def __load_model(self, config):
