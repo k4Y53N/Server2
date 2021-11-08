@@ -4,23 +4,19 @@ from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
-from .utils.Frames import RESET
+from utils.Frames import RESET
 from typing import Union, Any, Tuple, Text
 
 
 class Connection:
 
     def __init__(self, ip: str = 'localhost', port: int = 0) -> None:
-        """
-
-        :rtype: object
-        """
         self.__format = 'utf-8'
         self.__header_size = calcsize('>i')
         self.__connection_kword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
-        self.__server_sock.settimeout(3)
+        self.__server_sock.settimeout(5)
         self.__server_sock.listen(1)
         self.__server_address = self.__server_sock.getsockname()
         self.__client_address = None
@@ -46,7 +42,6 @@ class Connection:
 
         while self.__is_connect:
             try:
-                self.__reset()
                 logging.info('Waiting Client Connect...')
                 client, address = self.__server_sock.accept()
             except (OSError, KeyboardInterrupt, timeout, Exception) as E:
@@ -54,7 +49,8 @@ class Connection:
                 self.close()
             else:
                 self.__handle_client(client, address)
-                client.close()
+                self.__reset()
+
 
     def __handle_client(self, client: socket, address: Tuple[str, int]):
         self.__client_address = address
@@ -123,7 +119,7 @@ class Connection:
     def __send_all(self, client: socket, _bytes: bytes):
         total_send = 0
 
-        while total_send > len(_bytes):
+        while total_send < len(_bytes):
             sent = client.send(_bytes[total_send:])
             if not sent:
                 raise RuntimeError('Socket sending bytes fail')
@@ -131,9 +127,11 @@ class Connection:
 
     def __non_normal_disconnect(self, client: socket):
         self.__is_client_connect = False
+        pass
 
     def __normal_disconnect(self, client: socket, connection_ctrl: dict):
         self.__is_client_connect = False
+        pass
 
     def __reset(self):
         self.__clear_buffer()
@@ -157,8 +155,8 @@ class Connection:
 
     def close(self):
         self.__is_connect = False
+        self.__reset()
         self.__server_sock.close()
-        self.__clear_buffer()
 
     def get(self) -> Tuple[dict, Tuple[str, int]]:
         try:
@@ -188,7 +186,15 @@ class Connection:
 
 
 if __name__ == '__main__':
-    from .utils.util import get_hostname
+    from utils.util import get_hostname
+    from pprint import pprint
 
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)s:%(message)s',
+        datefmt='%Y/%m/%d %H:%M:%S',
+        level=logging.INFO
+    )
+    
     connection = Connection(get_hostname())
+    pprint(connection.__dict__)
     connection.activate()

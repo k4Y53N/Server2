@@ -1,6 +1,8 @@
 import logging
 from threading import Thread
 from time import process_time, sleep, time
+
+from PIL.Image import Image
 from unit.Camera import Camera
 from unit.Connection import Connection
 from unit.PyOLED import PyOLED
@@ -40,88 +42,64 @@ class Server:
             'SET_RESOLUTION': self.__set_resolution,
             'MOV': self.__move
         }
-        self.__thread = Thread(target=self.__loop, daemon=True)
+        self.__event_thread = Thread(target=self.__event_loop, daemon=True)
         self.__stream_thread = Thread(target=self.__streaming, daemon=True)
 
     def activate(self):
-        if self.__thread.is_alive():
-            return
+        if not self.__event_thread.is_alive():
+            try:
+                self.__event_thread.start()
+            except RuntimeError:
+                self.__event_thread = Thread(target=self.__event_loop, daemon=True)
+                self.__event_thread.start()
 
-        try:
-            self.__thread.start()
-        except RuntimeError:
-            self.__thread = Thread(target=self.__loop, daemon=True)
-            self.__thread.start()
-            self.__thread.join()
-        else:
-            self.__thread.join()
+        if  not self.__stream_thread.is_alive():
+            try:
+                self.__stream_thread.start()
+            except RuntimeError:
+                self.__stream_thread = Thread(target=self.__streaming, daemon=True)
+                self.__stream_thread.start()
 
-    def __loop(self):
+        if self.__event_thread.is_alive() and self.__stream_thread.is_alive():
+            self.__event_thread.join()
+            self.__stream_thread.join()
+
+    def __event_loop(self):
         current_address = self.__connection.get_client_address()
         while self.__connection.is_connect():
             command, address = self.__connection.get()
             if address != current_address:
                 self.__reset()
                 continue
+            if not command:
+                continue
             if command.get('CMD', None) in self.__func_map.keys():
                 self.__func_map[command['CMD']](command, address)
 
     def __streaming(self):
-        while self.__camera.is_stream():
-            grab, image = self.__camera.get()
-
-            if not (grab and self.__camera.is_stream()):
+        while self.__connection.is_connect():
+            address = self.__connection.get_client_address()
+            if (not address) or (not self.__camera.__is_client_stream()):
                 sleep(1)
-            elif self.__is_infer:
-                self.__vid_encode_infer(image)
+                continue
+
+            grab, image = self.__camera.get()
+            if (not grab) or ( not image):
+                sleep(1)
+                continue
+            
+            if self.__detector.is_client_infer():
+                ret = self.__vid_encode_infer(image)
+                self.__connection.put(ret, address)
             else:
-                self.__vid_encode(image)
+                ret = self.__vid_encode(image)
+                self.__connection.put(ret, address)
 
-    def __vid_encode_infer(self, image):
-        start = time()
-        frame = FRAME.copy()
-        address = self.__connection.get_client_address()
-        with Pool(processes=CPUS) as pool:
-            infer_result = pool.apply_async(self.__detector.detect, (image,))
-            jpg_result = pool.apply_async(
-                self.__camera.get_JPG_base64,
-                (image,)
-            )
+    def __vid_encode_infer(self, image) -> dict:
+        pass
 
-        try:
-            infer = infer_result.get()
-            jpg = jpg_result.get()
-            frame['BBOX'] = infer
-            frame['IMAGE'] = jpg
-        except Exception:
-            return
-
-        self.__connection.put(frame, address)
-        process_time = time() - start
-
-        if process_time < self.__camera.delay():
-            sleep(self.__camera.delay() - process_time)
-
-    def __vid_encode(self, image):
-        start = time()
-        frame = FRAME.copy()
-        adress = self.__connection.get_client_address()
-        with Pool(processes=CPUS) as pool:
-            jpg_result = pool.apply_async(
-                self.__camera.get_JPG_base64, (image,)
-            )
-
-        try:
-            jpg = jpg_result.get()
-            frame['IMAGE'] = jpg
-        except Exception:
-            return
-
-        self.__connection.put(frame, adress)
-        process_time = time() - start
-
-        if process_time < self.__camera.delay():
-            sleep(self.__camera.delay() - process_time)
+    def __vid_encode(self, image) -> dict:
+        pass
 
     def __reset(self):
         self.__camera.reset()
@@ -140,22 +118,21 @@ class Server:
 
     def __get_sys_info(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         info = SYS_INFO.copy()
-        info['IS_INFER'] = self.__detector.is_infer()
-        info['IS_STREAM'] = self.__camera.is_stream()
+        info['IS_INFER'] = self.__detector.is_client_infer()
+        info['IS_STREAM'] = self.__camera.is_client_stream()
         info['WIDTH'], info['HEIGHT'] = self.__camera.get_resolution()
         self.__connection.put(info, address)
 
     def __set_stream(self, command: dict, address: Tuple[str, int], *args, **kwargs):
         self.__camera.set_stream(command)
 
-        if self.__camera.is_stream():
+        if self.__camera.is_client_stream():
             if self.__stream_thread.is_alive():
                 return
             try:
                 self.__stream_thread.start()
             except RuntimeError:
-                self.__stream_thread = Thread(
-                    target=self.__streaming, daemon=True)
+                self.__stream_thread = Thread(target=self.__streaming, daemon=True)
                 self.__stream_thread.start()
 
     def __get_configs(self, command: dict, address: Tuple[str, int], *args, **kwargs):

@@ -1,4 +1,4 @@
-from .Connection import Connection
+from Connection import Connection
 from PIL import Image, ImageDraw, ImageFont
 from Adafruit_SSD1306 import SSD1306_128_32
 from time import sleep, time, gmtime, strftime
@@ -96,7 +96,6 @@ class PyOLED:
             fill=255,
             font=self.__font
         )
-
         self.__draw.text(
             (self.__x_time_padding, 22),
             c_uptime_txt,

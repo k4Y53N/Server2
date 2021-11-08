@@ -10,7 +10,7 @@ file_endname = '*.json'
 
 class Detector:
     def __init__(self) -> None:
-        self.__is_infer = False
+        self.__is_client_infer = False
 
     def get_configs(self, command: dict = {}, *args, **kwargs) -> dict:
         configs = CONFIGS.copy()
@@ -37,8 +37,8 @@ class Detector:
     def set_infer(self, command: dict = {}, *args, **kwargs):
         pass
 
-    def is_infer(self):
-        return self.__is_infer
+    def is_client_infer(self):
+        return self.__is_client_infer
 
     def detect(self, image: np.ndarray):
         pass

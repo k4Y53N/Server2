@@ -44,7 +44,7 @@ class Camera:
             flip_method=0), cv2.CAP_GSTREAMER)
         self.__grabbed, self.__image = False, None
         self.__streaming = True
-        self.__is_stream = False
+        self.__is_client_stream = False
         self.__thread = Thread(target=self.__loop)
 
         if self.__cap.isOpened():
@@ -85,6 +85,7 @@ class Camera:
     def reset(self):
         self.__width = self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.__height = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.__is_client_stream = False
 
     def close(self):
         self.__streaming = False
@@ -109,7 +110,7 @@ class Camera:
             width = int(width)
             height = int(height)
         except Exception:
-            raise TypeError('Not effect value')
+            raise ValueError('Not effect value')
 
         self.__width = width
         self.__height = height
@@ -126,5 +127,5 @@ class Camera:
     def is_alive(self):
         return self.__thread.is_alive()
 
-    def is_stream(self):
-        return self.__is_stream
+    def is_client_stream(self):
+        return self.__is_client_stream
