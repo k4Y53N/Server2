@@ -91,7 +91,7 @@ class Camera:
         self.__streaming = False
         self.__cap.release()
         self.__grabbed, self.__image = False, None
-    
+
     def encode_thread(self, dest_dic: dict, dic_key: str, image, *args) -> Thread:
         return Thread(target=self.encode, args=args)
 
@@ -108,7 +108,7 @@ class Camera:
         ret, jpg = cv2.imencode('.jpg', image)
 
         if not ret:
-            return None
+            return ''
 
         return b64encode(jpg.tobytes()).decode()
 
@@ -124,8 +124,8 @@ class Camera:
         self.__width = width
         self.__height = height
 
-    def set_stream(self, command={}, *args, **kwargs):
-        pass
+    def set_stream(self, is_stream: bool, *args, **kwargs):
+        self.__is_client_stream = bool(is_stream)
 
     def get_resolution(self):
         return self.__width, self.__height

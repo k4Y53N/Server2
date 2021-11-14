@@ -1,6 +1,6 @@
 import logging
 from threading import Thread
-from time import sleep 
+from time import sleep
 from unit.Camera import Camera
 from unit.Connection import Connection
 from unit.PyOLED import PyOLED
@@ -15,6 +15,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+
 class Server:
 
     def __init__(self) -> None:
@@ -22,9 +23,6 @@ class Server:
         self.__camera = Camera()
         self.__connection = Connection(get_hostname())
         self.__pyoled = PyOLED(self.__connection)
-        self.__camera.activate()
-        self.__connection.activate()
-        self.__pyoled.activate()
         self.__func_map = {
             'RESET': self.__reset,
             'GET_SYS_INFO': self.__get_sys_info,
@@ -40,6 +38,9 @@ class Server:
         self.__stream_thread = Thread(target=self.__streaming, daemon=True)
 
     def activate(self):
+        self.__camera.activate()
+        self.__connection.activate()
+        self.__pyoled.activate()
         if not self.__event_thread.is_alive():
             try:
                 self.__event_thread.start()
@@ -47,7 +48,7 @@ class Server:
                 self.__event_thread = Thread(target=self.__event_loop, daemon=True)
                 self.__event_thread.start()
 
-        if  not self.__stream_thread.is_alive():
+        if not self.__stream_thread.is_alive():
             try:
                 self.__stream_thread.start()
             except RuntimeError:
@@ -59,29 +60,40 @@ class Server:
             self.__stream_thread.join()
 
     def __event_loop(self):
-        current_address = self.__connection.get_client_address()
+        serve_address = self.__connection.get_client_address()
         while self.__connection.is_connect():
             command, address = self.__connection.get()
-            if address != current_address:
+            if address != serve_address:
                 self.__reset()
-                continue
+                serve_address = address
             if not command:
                 continue
-            if command.get('CMD', None) in self.__func_map.keys():
-                self.__func_map[command['CMD']](command, address)
+            else:
+                self.__event(command, address)
+
+    def __event(self, command: dict, address: tuple) -> None:
+        command_key = command.get('CMD', None)
+        if command_key not in self.__func_map.keys():
+            return None
+        command_function = self.__func_map[command_key]
+        ret = command_function(command)
+        if ret:
+            self.__connection.put(ret, address)
+
+        return None
 
     def __streaming(self):
         while self.__connection.is_connect():
             address = self.__connection.get_client_address()
-            if (not address) or (not self.__camera.__is_client_stream()):
+            if (not address) or (not self.__camera.is_client_stream()):
                 sleep(1)
                 continue
 
             grab, image = self.__camera.get()
-            if (not grab) or ( not image):
+            if (not grab) or (not image):
                 sleep(1)
                 continue
-            
+
             if self.__detector.is_client_infer():
                 ret = self.__vid_encode_infer(image)
                 self.__connection.put(ret, address)
@@ -101,7 +113,7 @@ class Server:
 
     def __vid_encode(self, image) -> dict:
         frame = FRAME.copy()
-        self.__camera.encode(frame, 'IMAGE', image)        
+        self.__camera.encode(frame, 'IMAGE', image)
         return frame
 
     def __reset(self):
@@ -119,16 +131,28 @@ class Server:
     def __shutdown(self):
         pass
 
-    def __get_sys_info(self, command: dict, address: Tuple[str, int], *args, **kwargs):
+    def __get_sys_info(self, command: dict, *args, **kwargs) -> dict:
         info = SYS_INFO.copy()
         info['IS_INFER'] = self.__detector.is_client_infer()
         info['IS_STREAM'] = self.__camera.is_client_stream()
         info['WIDTH'], info['HEIGHT'] = self.__camera.get_resolution()
-        self.__connection.put(info, address)
+        return info
 
-    def __set_stream(self, command: dict, address: Tuple[str, int], *args, **kwargs):
-        self.__camera.set_stream(command)
+    def __get_configs(self, command: dict, *args, **kwargs) -> dict:
+        configs = CONFIGS.copy()
+        configs.update(self.__detector.get_configs())
+        return configs
 
+    def __get_config(self, command: dict, *args, **kwargs) -> dict:
+        config = CONFIG.copy()
+        config.update(self.__detector.get_config())
+        return config
+
+    def __set_stream(self, command: dict, *args, **kwargs) -> None:
+        set_stream = command.get('STREAM', None)
+        if not set_stream:
+            return None
+        self.__camera.set_stream(bool(set_stream))
         if self.__camera.is_client_stream():
             if self.__stream_thread.is_alive():
                 return
@@ -138,32 +162,27 @@ class Server:
                 self.__stream_thread = Thread(target=self.__streaming, daemon=True)
                 self.__stream_thread.start()
 
-    def __get_configs(self, command: dict, address: Tuple[str, int], *args, **kwargs):
-        configs = CONFIGS.copy()
-        configs.update(self.__detector.get_configs())
-        self.__connection.put(configs, address)
-
-    def __get_config(self, command: dict, address: Tuple[str, int], *args, **kwargs):
-        config = CONFIG.copy()
-        config.update(self.__detector.get_config())
-        self.__connection.put(config, address)
-
-    def __set_config(self, command: dict, address: Tuple[str, int], *args, **kwargs):
+    def __set_config(self, command: dict, *args, **kwargs) -> None:
         self.__detector.set_config(config=command)
+        return None
 
-    def __set_infer(self, command: dict, address: Tuple[str, int], *args, **kwargs):
+    def __set_infer(self, command: dict, *args, **kwargs) -> None:
         self.__detector.set_infer(command)
+        return None
 
-    def __set_resolution(self, command: dict, address: Tuple[str, int], *args, **kwargs):
+    def __set_resolution(self, command: dict, *args, **kwargs) -> None:
         self.__camera.set_resolution(command)
+        return None
 
-    def __move(self, command: dict, address: Tuple[str, int], *args, **kwargs):
+    def __move(self, command: dict, address: Tuple[str, int], *args, **kwargs) -> None:
         pass
+        return None
 
 
 if __name__ == '__main__':
+    server = Server()
+
     try:
-        server = Server()
         server.activate()
     except (KeyboardInterrupt, Exception) as e:
         logging.error(e.__class__.__name__, exc_info=True)

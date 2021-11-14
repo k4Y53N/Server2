@@ -4,7 +4,6 @@ from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
-from utils.Commands import RESET
 from typing import Union, Any, Tuple, Text
 
 
@@ -13,7 +12,7 @@ class Connection:
     def __init__(self, ip: str = 'localhost', port: int = 0) -> None:
         self.__format = 'utf-8'
         self.__header_size = calcsize('>i')
-        self.__connection_kword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
+        self.__connection_keyword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
         self.__server_sock.settimeout(5)
@@ -51,7 +50,6 @@ class Connection:
                 self.__handle_client(client, address)
                 self.__reset()
 
-
     def __handle_client(self, client: socket, address: Tuple[str, int]):
         self.__client_address = address
         logging.info(f'Client Connect Address => {address[0]}:{address[1]}')
@@ -68,7 +66,7 @@ class Connection:
         while self.__is_client_connect:
             try:
                 message, address = self.__recv_message(client), client.getsockname()
-                if message['CMD'] in self.__connection_kword:
+                if message['CMD'] in self.__connection_keyword:
                     self.__normal_disconnect(client, message)
                 else:
                     self.__input_buffer.put((message, address), True, 0.2)
@@ -194,7 +192,7 @@ if __name__ == '__main__':
         datefmt='%Y/%m/%d %H:%M:%S',
         level=logging.INFO
     )
-    
+
     connection = Connection(get_hostname())
     pprint(connection.__dict__)
     connection.activate()
