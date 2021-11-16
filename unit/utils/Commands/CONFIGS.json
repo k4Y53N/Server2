@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
     "CMD": "CONFIGS",
     "CONFIGS": {
@@ -19,3 +20,26 @@
         }
     }
 }
+=======
+{
+    "CMD": "CONFIGS",
+    "CONFIGS": {
+        "person.json": {
+            "SIZE": 320,
+            "MODEL_TYPE": "yolov4",
+            "TINY": false,
+            "CLASSES": [
+                "person"
+            ]
+        },
+        "person2.json": {
+            "SIZE": 320,
+            "MODEL_TYPE": "yolov4",
+            "TINY": false,
+            "CLASSES": [
+                "person"
+            ]
+        }
+    }
+}
+>>>>>>> 7f0912c868cfa6e4da967f4b77247a77b45a10b5
