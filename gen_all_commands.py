@@ -5,6 +5,26 @@ from unit.Detector import Detector
 from unit.utils.Commands import *
 
 cmd_dir = Path('./unit/utils/Commands')
+configs_dir = Path('./configs')
+file_suffix = '*.json'
+
+
+def load_configs(*args, **kwargs):
+    configs = CONFIGS.copy()
+
+    for PATH in configs_dir.glob(file_suffix):
+        with PATH.open() as f:
+            config = json.load(f)
+
+        configs['CONFIGS'][PATH.name] = {
+            'SIZE': config['size'],
+            'MODEL_TYPE': config['model_type'],
+            'TINY': config['tiny'],
+            'CLASSES': config['YOLO']['CLASSES'],
+        }
+
+    return configs
+
 
 login = cmd_dir / 'LOGIN.json'
 logout = cmd_dir / 'LOGOUT.json'
@@ -35,7 +55,7 @@ PATH_GROUP = [
 
 DIC_GROUP = [
     LOGIN, LOGOUT, EXIT, SHUTDOWN, RESET, GET_SYS_INFO, SET_STREAM, GET_CONFIGS, GET_CONFIG, SET_CONFIG, SET_INFER,
-    SET_QUALITY, MOV, SYS_INFO, LOGIN_INFO, CONFIG, CONFIGS, SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN, FRAME
+    SET_QUALITY, MOV, SYS_INFO, LOGIN_INFO, CONFIG, load_configs(), SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN, FRAME
 ]
 
 dic_and_path = zip(DIC_GROUP, PATH_GROUP)
@@ -46,5 +66,6 @@ def write_dic2json(dic: dict, path: Path):
         f.write(json.dumps(dic))
 
 
-for d, p in dic_and_path:
-    write_dic2json(d, p)
+if __name__ == '__main__':
+    for d, p in dic_and_path:
+        write_dic2json(d, p)

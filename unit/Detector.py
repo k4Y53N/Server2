@@ -4,8 +4,8 @@ import numpy as np
 from threading import Thread
 from .utils.Commands import CONFIGS
 
-configs_dir = Path('./configs')
-file_endname = '*.json'
+configs_dir = Path('../configs')
+file_suffix = '*.json'
 
 
 class Detector:
@@ -17,7 +17,7 @@ class Detector:
     def load_configs(*args, **kwargs):
         configs = CONFIGS.copy()
 
-        for PATH in configs_dir.glob(file_endname):
+        for PATH in configs_dir.glob(file_suffix):
             with PATH.open() as f:
                 config = json.load(f)
 
@@ -69,4 +69,4 @@ class Detector:
 
 
 if __name__ == '__main__':
-    pass
+    print(Detector.load_configs())
