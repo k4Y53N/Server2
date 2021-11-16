@@ -1,1 +1,21 @@
-{"CMD": "CONFIGS", "CONFIGS": {"person.json": {"SIZE": 320, "MODEL_TYPE": "yolov4", "TINY": false, "CLASSES": ["person"]}, "person2.json": {"SIZE": 320, "MODEL_TYPE": "yolov4", "TINY": false, "CLASSES": ["person"]}}}
+{
+    "CMD": "CONFIGS",
+    "CONFIGS": {
+        "person.json": {
+            "SIZE": 320,
+            "MODEL_TYPE": "yolov4",
+            "TINY": false,
+            "CLASSES": [
+                "person"
+            ]
+        },
+        "person2.json": {
+            "SIZE": 320,
+            "MODEL_TYPE": "yolov4",
+            "TINY": false,
+            "CLASSES": [
+                "person"
+            ]
+        }
+    }
+}

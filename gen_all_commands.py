@@ -1,7 +1,5 @@
 import json
 from pathlib import Path
-from pprint import pprint
-from unit.Detector import Detector
 from unit.utils.Commands import *
 
 cmd_dir = Path('./unit/utils/Commands')
