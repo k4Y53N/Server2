@@ -1,0 +1,50 @@
+import json
+from pathlib import Path
+from pprint import pprint
+from unit.Detector import Detector
+from unit.utils.Commands import *
+
+cmd_dir = Path('./unit/utils/Commands')
+
+login = cmd_dir / 'LOGIN.json'
+logout = cmd_dir / 'LOGOUT.json'
+_exit = cmd_dir / 'EXIT.json'
+shutdown = cmd_dir / 'SHUT_DOWN.json'
+reset = cmd_dir / 'RESET.json'
+get_sys_info = cmd_dir / 'GET_SYS_INFO.json'
+set_stream = cmd_dir / 'SET_STREAM.json'
+get_configs = cmd_dir / 'GET_CONFIGS.json'
+get_config = cmd_dir / 'GET_CONFIG.json'
+set_config = cmd_dir / 'SET_CONFIG.json'
+set_infer = cmd_dir / 'SET_INFER.json'
+set_quality = cmd_dir / 'SET_QUALITY.json'
+mov = cmd_dir / 'MOV.json'
+sys_info = cmd_dir / 'SYS_INFO.json'
+login_info = cmd_dir / 'LOGIN_INFO.json'
+config = cmd_dir / 'CONFIG.json'
+configs = cmd_dir / 'CONFIGS.json'
+sys_log_out = cmd_dir / 'SYS_LOGOUT.json'
+sys_exit = cmd_dir / 'SYS_EXIT.json'
+sys_shutdown = cmd_dir / 'SYS_SHUTDOWN.json'
+frame = cmd_dir / 'FRAME.json'
+
+PATH_GROUP = [
+    login, logout, _exit, shutdown, reset, get_sys_info, set_stream, get_configs, get_config, set_config, set_infer,
+    set_quality, mov, sys_info, login_info, config, configs, sys_log_out, sys_exit, sys_shutdown, frame
+]
+
+DIC_GROUP = [
+    LOGIN, LOGOUT, EXIT, SHUTDOWN, RESET, GET_SYS_INFO, SET_STREAM, GET_CONFIGS, GET_CONFIG, SET_CONFIG, SET_INFER,
+    SET_QUALITY, MOV, SYS_INFO, LOGIN_INFO, CONFIG, CONFIGS, SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN, FRAME
+]
+
+dic_and_path = zip(DIC_GROUP, PATH_GROUP)
+
+
+def write_dic2json(dic: dict, path: Path):
+    with path.open('w') as f:
+        f.write(json.dumps(dic))
+
+
+for d, p in dic_and_path:
+    write_dic2json(d, p)

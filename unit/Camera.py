@@ -112,7 +112,7 @@ class Camera:
 
         return b64encode(jpg.tobytes()).decode()
 
-    def set_resolution(self, width: int, height: int):
+    def set_quality(self, width: int, height: int):
         if width < 100 or height < 100:
             raise ValueError('Width or height is too small')
         try:

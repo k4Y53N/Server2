@@ -31,7 +31,7 @@ class Server:
             'SET_CONFIG': self.__set_config,
             'SET_INFER': self.__set_infer,
             'SET_STREAM': self.__set_stream,
-            'SET_RESOLUTION': self.__set_resolution,
+            'SET_QUALITY': self.__set_quality,
             'MOV': self.__move
         }
         self.__event_thread = Thread(target=self.__event_loop, daemon=True)
@@ -170,8 +170,8 @@ class Server:
         self.__detector.set_infer(command)
         return None
 
-    def __set_resolution(self, command: dict, *args, **kwargs) -> None:
-        self.__camera.set_resolution(command)
+    def __set_quality(self, command: dict, *args, **kwargs) -> None:
+        self.__camera.set_quality(command)
         return None
 
     def __move(self, command: dict, address: Tuple[str, int], *args, **kwargs) -> None:

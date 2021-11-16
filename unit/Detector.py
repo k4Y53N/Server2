@@ -2,9 +2,7 @@ import json
 from pathlib import Path
 import numpy as np
 from threading import Thread
-from utils.util import nowait
-from utils.Commands import CONFIGS
-
+from .utils.Commands import CONFIGS
 
 configs_dir = Path('./configs')
 file_endname = '*.json'
@@ -13,8 +11,10 @@ file_endname = '*.json'
 class Detector:
     def __init__(self) -> None:
         self.__is_client_infer = False
+        self.configs = self.load_configs()
 
-    def get_configs(self, command: dict = {}, *args, **kwargs) -> dict:
+    @staticmethod
+    def load_configs(*args, **kwargs):
         configs = CONFIGS.copy()
 
         for PATH in configs_dir.glob(file_endname):
@@ -29,6 +29,9 @@ class Detector:
             }
 
         return configs
+
+    def get_configs(self, *args, **kwargs) -> dict:
+        return self.configs
 
     def get_config(self, command: dict = {}, *args, **kwargs):
         pass
@@ -53,9 +56,7 @@ class Detector:
 
     def detect(self, image):
         pass
-    
 
-    @nowait
     def __load_model(self, config):
         # TODO: ONLY USE LOAD_WEIGHT
         pass

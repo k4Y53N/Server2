@@ -4,7 +4,7 @@ from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
-from typing import Union, Any, Tuple, Text
+from typing import Union, Tuple
 
 
 class Connection:
@@ -15,7 +15,7 @@ class Connection:
         self.__connection_keyword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
-        self.__server_sock.settimeout(5)
+        self.__server_sock.settimeout(300)
         self.__server_sock.listen(1)
         self.__server_address = self.__server_sock.getsockname()
         self.__client_address = None
@@ -37,7 +37,7 @@ class Connection:
             self.__thread.start()
 
     def __loop(self):
-        logging.info(f'Connection Server Address => {self.__server_address}')
+        logging.info(f'Connection Server Address => {self.__server_address[0]}:{self.__server_address[1]}')
 
         while self.__is_connect:
             try:

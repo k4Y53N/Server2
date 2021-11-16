@@ -65,7 +65,7 @@ example:
 # 請求登入
 LOGIN = {
     'CMD': 'LOGIN',
-    'PWD': None,  # STR
+    'PWD': 'None',  # STR
 }
 # 請求登出
 LOGOUT = {
@@ -74,12 +74,12 @@ LOGOUT = {
 # 請求登出並離開系統
 EXIT = {
     'CMD': 'EXIT',
-    'PWD': None,  # STR
+    'PWD': 'None',  # STR
 }
 # 請求登出、離開系統並關機
-SHUT_DOWN = {
+SHUTDOWN = {
     'CMD': 'SHUTDOWN',
-    'PWD': None  # STR
+    'PWD': 'None'  # STR
 }
 # 重置系統並且不登出
 RESET = {
@@ -110,19 +110,19 @@ SET_CONFIG = {
 # 設定串流影像是否附加回傳辨識結果
 SET_INFER = {
     'CMD': 'SET_INFER',
-    'INFER': None  # BOOLEAN
+    'INFER': True  # BOOLEAN
 }
 # 設定攝影機畫質
-SET_RESOLUTION = {
-    'CMD': 'SET_RESOLUTION',
-    'WIDTH': None,  # INT
-    'HEIGHT': None,  # INT
+SET_QUALITY = {
+    'CMD': 'SET_QUALITY',
+    'WIDTH': 1080,  # INT
+    'HEIGHT': 720,  # INT
 }
 # 設定移動
 MOV = {
     'CMD': 'MOV',
-    'L': None,  # FLOAT
-    'R': None,  # FLOAT
+    'L': 0.0,  # FLOAT
+    'R': 0.0,  # FLOAT
 }
 
 """
@@ -133,8 +133,8 @@ SYS_INFO = {  # SYS SETTING
     'CMD': 'SYS_INFO',
     'IS_INFER': False,
     'IS_STREAM': False,
-    'CAMERA_WIDTH': None,  # INT
-    'CAMERA_HEIGHT': None,  # INT
+    'CAMERA_WIDTH': 1080,  # INT
+    'CAMERA_HEIGHT': 720,  # INT
 }
 # 回傳登入狀態
 LOGIN_INFO = {
@@ -153,7 +153,7 @@ CONFIG = {
 # 回傳Client可選的config檔
 CONFIGS = {
     'CMD': 'CONFIGS',
-    'CONFIGS':{
+    'CONFIGS': {
         # config_name1 :{
         #   SIZE: 320,
         #   MODEL_TYPE : yolov4
@@ -184,7 +184,6 @@ SYS_SHUTDOWN = {
 # 回傳Client串流畫面，如果有附加辨識結果 'IS_INFER' 為TRUE 且附加 BBOX, 否則 IS_INFER 為FALSE.
 FRAME = {
     'CMD': 'FRAME',
-    # 'IS_INFER': False,  # BOOLEAN   (移除)
     'IMAGE': '',  # BASE64 String
     'BBOX': [],  # ARRAY
 }
