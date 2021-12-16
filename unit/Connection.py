@@ -51,9 +51,9 @@ class Connection:
                 self.__reset()
 
     def __handle_client(self, client: socket, address: Tuple[str, int]):
-        self.__client_address = address
+        self.__client_address = client.getpeername()
         logging.info(f'Client Connect Address => {address[0]}:{address[1]}')
-        client.settimeout(3)
+        client.settimeout(30)
         recv_thread = Thread(target=self.__listening, args=(client,), daemon=True)
         send_thread = Thread(target=self.__sending, args=(client,), daemon=True)
         recv_thread.start()
@@ -65,7 +65,7 @@ class Connection:
     def __listening(self, client: socket):
         while self.__is_client_connect:
             try:
-                message, address = self.__recv_message(client), client.getsockname()
+                message, address = self.__recv_message(client), client.getpeername()
                 if message['CMD'] in self.__connection_keyword:
                     self.__normal_disconnect(client, message)
                 else:
@@ -98,7 +98,7 @@ class Connection:
         while self.__is_client_connect:
             try:
                 msg_bytes, address = self.__output_buffer.get(True, 0.2)
-                if address != client.getsockname():
+                if address != client.getpeername():
                     continue
                 self.__send_message(client, msg_bytes)
             except Empty:
@@ -153,20 +153,20 @@ class Connection:
 
     def close(self):
         self.__is_connect = False
-        self.__reset()
+        self.__is_client_connect = False
         self.__server_sock.close()
 
-    def get(self) -> Tuple[dict, Tuple[str, int]]:
+    def get(self, time_limit: float = 0.2) -> Tuple[dict, Tuple[str, int]]:
         try:
-            message = self.__input_buffer.get()
+            message = self.__input_buffer.get(block=True, timeout=time_limit)
         except Empty:
             return dict(), self.__client_address
         else:
             return message, self.__client_address
 
-    def put(self, message: dict, address: Tuple[str, int]):
+    def put(self, message: dict, address: Tuple[str, int], time_limit: float = 0.2):
         try:
-            self.__output_buffer.put((message, address), True, 0.2)
+            self.__output_buffer.put((message, address), True, time_limit)
         except Full:
             return
 

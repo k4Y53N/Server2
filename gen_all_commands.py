@@ -10,11 +10,11 @@ file_suffix = '*.json'
 def load_configs(*args, **kwargs):
     configs = CONFIGS.copy()
 
-    for PATH in configs_dir.glob(file_suffix):
-        with PATH.open() as f:
+    for config_path in configs_dir.glob(file_suffix):
+        with config_path.open() as f:
             config = json.load(f)
 
-        configs['CONFIGS'][PATH.name] = {
+        configs['CONFIGS'][config_path.name] = {
             'SIZE': config['size'],
             'MODEL_TYPE': config['model_type'],
             'TINY': config['tiny'],
@@ -56,8 +56,6 @@ DIC_GROUP = [
     SET_QUALITY, MOV, SYS_INFO, LOGIN_INFO, CONFIG, load_configs(), SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN, FRAME
 ]
 
-dic_and_path = zip(DIC_GROUP, PATH_GROUP)
-
 
 def write_dic2json(dic: dict, path: Path):
     with path.open('w') as f:
@@ -65,5 +63,5 @@ def write_dic2json(dic: dict, path: Path):
 
 
 if __name__ == '__main__':
-    for d, p in dic_and_path:
+    for d, p in zip(DIC_GROUP, PATH_GROUP):
         write_dic2json(d, p)
