@@ -1,4 +1,7 @@
 """
+2021/12/12
+更改MOV預設KEY(R、THETA)
+
 2021/9/21
 FRAME移除IS_INFER
 如果有辨識結果只要判斷BBOX長度是否為零即可
@@ -121,8 +124,10 @@ SET_QUALITY = {
 # 設定移動
 MOV = {
     'CMD': 'MOV',
-    'L': 0.0,  # FLOAT
-    'R': 0.0,  # FLOAT
+    # 'L': 0.0,  # FLOAT
+    # 'R': 0.0,  # FLOAT
+    'R': 0,  # FLOAT (0~1)
+    'THETA': 0,  # FLOAT(0~360)
 }
 
 """
