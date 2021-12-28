@@ -1,5 +1,5 @@
-import time
-from threading import Thread, Lock
+from threading import Thread
+from time import time, sleep
 
 
 class RepeatTimer(Thread):
@@ -12,32 +12,35 @@ class RepeatTimer(Thread):
         self.__args = args
         self.__kwargs = kwargs
         self.__interval = interval
-        self.__times = int(times)
-        self.__count = self.__times
+        self.__period = times * interval
+        self.__init_time = None
         self.__is_running = False
-        self.__lock = Lock()
 
-    def run(self, *args, **kwargs) -> None:
+    def run(self) -> None:
         self.__is_running = True
+        self.reset_time()
         while self.__is_running:
-            self.__sleep()
-            if self.__count <= 0:
+            sleep(self.__interval)
+            if time() - self.__init_time >= self.__period:
                 self.__execute()
                 self.reset_time()
 
-    def __sleep(self):
-        init_time = time.time()
-        time.sleep(self.__interval)
-        execute_time = time.time() - init_time
-        with self.__lock:
-            self.__count -= execute_time / self.__interval
+    def reset_time(self):
+        self.__init_time = time()
 
     def __execute(self):
         self.__func(*self.__args, **self.__kwargs)
 
-    def reset_time(self):
-        with self.__lock:
-            self.__count = self.__times
-
     def close(self):
         self.__is_running = False
+
+
+if __name__ == '__main__':
+    def foo():
+        print('\rCurrent time : %f' % time(), end='')
+
+
+    t = RepeatTimer(func=foo)
+    t.start()
+    t.join()
+    # t.close()
