@@ -2,7 +2,6 @@ import cv2
 import logging
 import numpy as np
 from base64 import b64encode
-from time import time, sleep
 from threading import Thread
 
 _width = 1280
@@ -14,7 +13,7 @@ def gstreamer_pipeline(
         capture_height=_height,
         display_width=_width,
         display_height=_height,
-        framerate=59.,
+        fps=59.,
         flip_method=0,
 ):
     return (
@@ -29,7 +28,7 @@ def gstreamer_pipeline(
             % (
                 capture_width,
                 capture_height,
-                framerate,
+                fps,
                 flip_method,
                 display_width,
                 display_height,
@@ -40,12 +39,8 @@ def gstreamer_pipeline(
 class Camera:
 
     def __init__(self) -> None:
-        self.__cap = cv2.VideoCapture(gstreamer_pipeline(
-            flip_method=0), cv2.CAP_GSTREAMER)
-        self.__grabbed, self.__image = False, None
+        self.__cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
         self.__streaming = True
-        self.__is_client_stream = False
-        self.__thread = Thread(target=self.__loop)
 
         if self.__cap.isOpened():
             self.__FPS = self.__cap.get(cv2.CAP_PROP_FPS)
@@ -56,60 +51,29 @@ class Camera:
         else:
             raise RuntimeError('Camera open fail')
 
-    def activate(self):
-        if self.__thread.is_alive():
-            return
-
-        try:
-            self.reset()
-            self.__thread.start()
-        except RuntimeError:
-            self.__thread = Thread(target=self.__loop, daemon=True)
-            self.__thread.start()
-
-    def __loop(self):
-        while self.__streaming:
-            start = time()
-            self.__grabbed, self.__image = self.__cap.read()
-            end = time()
-            process_time = end - start
-
-            if process_time < self.__delay:
-                sleep(self.__delay - process_time)
-
-        self.close()
-
     def get(self):
-        return self.__grabbed, self.__image
+        return self.__cap.read()
 
     def reset(self):
         self.__width = self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.__height = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.__is_client_stream = False
 
     def close(self):
         self.__streaming = False
         self.__cap.release()
-        self.__grabbed, self.__image = False, None
 
-    def encode_thread(self, dest_dic: dict, dic_key: str, image, *args) -> Thread:
-        return Thread(target=self.encode, args=args)
+    def get_encode_thread(self, des_dict: dict, dic_key: str, image) -> Thread:
+        return Thread(target=self.encode, args=(des_dict, dic_key, image), daemon=True)
 
-    def encode(self, dest_dic: dict, dic_key: str, image, *args):
-        try:
-            dest_dic[dic_key] = self.get_JPG_base64(image)
-        except:
-            dest_dic[dic_key] = None
+    def encode(self, des_dic: dict, dic_key: str, image):
+        des_dic[dic_key] = self.get_jpg_base64(image)
 
-    def get_JPG_base64(self, image: np.ndarray) -> str:
+    def get_jpg_base64(self, image: np.ndarray) -> str:
         if image.shape != (self.__width, self.__height, 3):
             image = cv2.resize(image, (self.__width, self.__height))
-
         ret, jpg = cv2.imencode('.jpg', image)
-
         if not ret:
             return ''
-
         return b64encode(jpg.tobytes()).decode()
 
     def set_quality(self, width: int, height: int):
@@ -124,17 +88,8 @@ class Camera:
         self.__width = width
         self.__height = height
 
-    def set_stream(self, is_stream: bool, *args, **kwargs):
-        self.__is_client_stream = bool(is_stream)
-
     def get_resolution(self):
         return self.__width, self.__height
 
     def delay(self):
         return self.__delay
-
-    def is_alive(self):
-        return self.__thread.is_alive()
-
-    def is_client_stream(self):
-        return self.__is_client_stream

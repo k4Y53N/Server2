@@ -7,52 +7,43 @@ from struct import calcsize, pack, unpack
 from typing import Union, Tuple
 
 
-class Connection:
+class Connection(Thread):
 
     def __init__(self, ip: str = 'localhost', port: int = 0) -> None:
+        Thread.__init__(self)
         self.__format = 'utf-8'
         self.__header_size = calcsize('>i')
         self.__connection_keyword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
-        self.__server_sock.settimeout(300)
-        self.__server_sock.listen(1)
-        self.__server_address = self.__server_sock.getsockname()
-        self.__client_address = None
         self.__send_lock = Lock()
         self.__input_buffer = Queue()
         self.__output_buffer = Queue()
+        self.__server_address = self.__server_sock.getsockname()
+        self.__client_address = None
         self.__is_connect = True
         self.__is_client_connect = True
-        self.__thread = Thread(target=self.__loop)
 
-    def activate(self):
-        if self.__thread.is_alive():
-            return
-
-        try:
-            self.__thread.start()
-        except RuntimeError:
-            self.__thread = Thread(target=self.__loop)
-            self.__thread.start()
-
-    def __loop(self):
-        logging.info(f'Connection Server Address => {self.__server_address[0]}:{self.__server_address[1]}')
+    def run(self):
+        self.__server_sock.settimeout(300)
+        self.__server_sock.listen(1)
+        logging.info('Connection Server Address => %s:%d' % self.__server_address)
 
         while self.__is_connect:
             try:
                 logging.info('Waiting Client Connect...')
                 client, address = self.__server_sock.accept()
+                self.__handle_client(client, address)
             except (OSError, KeyboardInterrupt, timeout, Exception) as E:
                 logging.error(E.__class__.__name__, exc_info=True)
-                self.close()
-            else:
-                self.__handle_client(client, address)
+                continue
+            finally:
                 self.__reset()
+        self.close()
 
     def __handle_client(self, client: socket, address: Tuple[str, int]):
         self.__client_address = client.getpeername()
-        logging.info(f'Client Connect Address => {address[0]}:{address[1]}')
+        logging.info('Client Connect Address => %s:%d' % address)
         client.settimeout(30)
         recv_thread = Thread(target=self.__listening, args=(client,), daemon=True)
         send_thread = Thread(target=self.__sending, args=(client,), daemon=True)
@@ -73,7 +64,7 @@ class Connection:
             except Full:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                logging.error(f'Receive Thread Error => {E.__class__.__name__}', exc_info=True)
+                logging.error(f'{E.__class__.__name__} with {E.args[0]}', exc_info=True)
                 self.__non_normal_disconnect(client)
 
     def __recv_message(self, client: socket) -> dict:
@@ -89,7 +80,7 @@ class Connection:
         while len(buffer) < buffer_size:
             _bytes = client.recv(buffer_size - len(buffer))
             if not _bytes:
-                raise RuntimeError('Socket receiving bytes fail')
+                raise RuntimeError('Pipline close')
             buffer.extend(_bytes)
 
         return buffer
@@ -104,7 +95,7 @@ class Connection:
             except Empty:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                logging.error(f'Send Thread Error => {E.__class__.__name__}', exc_info=True)
+                logging.error(f'{E.__class__.__name__} with {E.args[0]}', exc_info=True)
                 self.__non_normal_disconnect(client)
 
     def __send_message(self, client: socket, message: dict):
@@ -120,7 +111,7 @@ class Connection:
         while total_send < len(_bytes):
             sent = client.send(_bytes[total_send:])
             if not sent:
-                raise RuntimeError('Socket sending bytes fail')
+                raise RuntimeError('Pipline close')
             total_send += sent
 
     def __non_normal_disconnect(self, client: socket):
@@ -152,17 +143,17 @@ class Connection:
         pass
 
     def close(self):
+        self.__reset()
         self.__is_connect = False
         self.__is_client_connect = False
         self.__server_sock.close()
 
     def get(self, time_limit: float = 0.2) -> Tuple[dict, Tuple[str, int]]:
         try:
-            message = self.__input_buffer.get(block=True, timeout=time_limit)
+            message, address = self.__input_buffer.get(True, time_limit)
+            return message, address
         except Empty:
             return dict(), self.__client_address
-        else:
-            return message, self.__client_address
 
     def put(self, message: dict, address: Tuple[str, int], time_limit: float = 0.2):
         try:
@@ -179,13 +170,9 @@ class Connection:
     def is_connect(self) -> bool:
         return self.__is_connect
 
-    def is_alive(self) -> bool:
-        return self.__thread.is_alive()
-
 
 if __name__ == '__main__':
     from utils.util import get_hostname
-    from pprint import pprint
 
     logging.basicConfig(
         format='%(asctime)s %(levelname)s:%(message)s',
@@ -194,5 +181,8 @@ if __name__ == '__main__':
     )
 
     connection = Connection(get_hostname())
-    pprint(connection.__dict__)
-    connection.activate()
+    connection.start()
+    print(connection.get_server_address())
+    print(connection.get_client_address())
+    # connection.unlock()
+    connection.join()

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import numpy as np
 from threading import Thread
-from .utils.Commands import CONFIGS
+from utils.Commands import CONFIGS
 
 configs_dir = Path('../configs')
 file_suffix = '*.json'
@@ -10,7 +10,6 @@ file_suffix = '*.json'
 
 class Detector:
     def __init__(self) -> None:
-        self.__is_client_infer = False
         self.configs = self.load_configs()
 
     @staticmethod
@@ -33,17 +32,14 @@ class Detector:
     def get_configs(self, *args, **kwargs) -> dict:
         return self.configs
 
-    def get_config(self, command: dict = {}, *args, **kwargs):
+    def get_config(self):
         pass
 
-    def set_config(self, command: dict = {}, *args, **kwargs):
+    def set_config(self, command: dict, *args, **kwargs):
         pass
 
-    def set_infer(self, command: dict = {}, *args, **kwargs):
+    def set_infer(self, command: dict, *args, **kwargs):
         pass
-
-    def is_client_infer(self):
-        return self.__is_client_infer
 
     def infer_thread(self, dest_dic: dict, dic_key: str, image, *args):
         return Thread(target=self.infer, args=args)
@@ -51,7 +47,7 @@ class Detector:
     def infer(self, dest_dic: dict, dic_key: str, image: np.ndarray, *args):
         try:
             dest_dic[dic_key] = self.detect(image)
-        except:
+        except Exception:
             dest_dic[dic_key] = []
 
     def detect(self, image):

@@ -138,7 +138,7 @@ SYS_INFO = {  # SYS SETTING
     'CMD': 'SYS_INFO',
     'IS_INFER': False,
     'IS_STREAM': False,
-    'CAMERA_WIDTH': 1080,  # INT
+    'CAMERA_WIDTH': 1280,  # INT
     'CAMERA_HEIGHT': 720,  # INT
 }
 # 回傳登入狀態
