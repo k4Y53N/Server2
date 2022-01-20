@@ -28,6 +28,7 @@ class Monitor(RepeatTimer):
 
     def execute_phase(self):
         self.update()
+        self.displayer.image(self.image)
         self.displayer.display()
 
     def close_phase(self):
