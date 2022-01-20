@@ -46,7 +46,6 @@ class Server(Thread):
 
     def __event_loop(self):
         serve_address = self.__connection.get_client_address()
-        self.__monitor.set_row_string(1, '%s:%d' % serve_address)
         while self.__connection.is_alive() and self.__is_running:
             command, address = self.__connection.get()
             if address != serve_address:
