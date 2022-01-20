@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import numpy as np
 from threading import Thread
-from utils.Commands import CONFIGS
+from .utils.Commands import CONFIGS
 
 configs_dir = Path('../configs')
 file_suffix = '*.json'

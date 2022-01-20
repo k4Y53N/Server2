@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from Adafruit_SSD1306 import SSD1306_128_32
 from time import time, gmtime, strftime
-from RepeatTimer import RepeatTimer
+from .RepeatTimer import RepeatTimer
 from threading import Lock
 
 
