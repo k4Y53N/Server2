@@ -41,16 +41,12 @@ def sleep_timer(sleep_time: float = 0):
 
 
 def get_hostname() -> str:
-
     if platform.startswith('linux'):
-        ip_rex = re.compile('\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-        ip = ''
         with os.popen('hostname -I') as f:
             hostnames = f.read()
-
-        if ip_rex.match(hostnames):
-            ip = ip_rex.findall(hostnames)[0]
-            return ip
+        hostname = hostnames.split()[0]
+        if len(hostname) > 0:
+            return hostname
 
     return gethostbyname(getfqdn())
 
