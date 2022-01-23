@@ -1,9 +1,9 @@
 import logging as log
 from threading import Thread
-from unit.Camera import Camera
-from unit.Connection import Connection
-from unit.Monitor import Monitor
-from unit.Detector import Detector
+from unit import Camera
+from unit import Connection
+from unit import Detector
+from unit import Monitor
 from unit.utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
 from unit.utils.util import get_hostname
 from typing import Tuple
