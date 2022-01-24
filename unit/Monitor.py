@@ -75,16 +75,3 @@ class Monitor(RepeatTimer):
         with self.lock:
             self.rows[index] = row_str
             self.row_init_times[index] = time()
-
-
-if __name__ == '__main__':
-    from time import sleep
-
-    m = Monitor()
-    m.start()
-    m.set_row_string(0, 'hello')
-    sleep(2)
-    m.set_row_string(1, 'python')
-    sleep(20)
-    m.close()
-    m.join()

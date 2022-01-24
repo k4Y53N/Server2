@@ -50,21 +50,3 @@ class Servo(RepeatTimer):
             self.REAR_RIGHT.ChangeDutyCycle(r)
 
         self.reset_time()
-
-
-if __name__ == '__main__':
-    from .Monitor import Monitor
-    import time
-
-    m = Monitor()
-    s = Servo()
-    s.start()
-    m.start()
-    m.set_row_string(0, 'Servo start')
-    time.sleep(5)
-    m.set_row_string(1, 'Servo change')
-    s.set(0.8, 75)
-    time.sleep(2)
-    print('close')
-    m.close()
-    s.close()

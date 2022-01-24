@@ -175,8 +175,7 @@ if __name__ == '__main__':
     server = Server()
 
     try:
-        server.start()
-        server.join()
+        server.run()
     except (KeyboardInterrupt, Exception) as e:
         log.error(e.__class__.__name__, exc_info=True)
         server.close()
