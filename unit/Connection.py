@@ -64,7 +64,7 @@ class Connection(Thread):
             except Full:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                logging.error(f'{E.__class__.__name__} with {E.args[0]}', exc_info=True)
+                logging.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=True)
                 self.__non_normal_disconnect(client)
 
     def __recv_message(self, client: socket) -> dict:
@@ -95,7 +95,7 @@ class Connection(Thread):
             except Empty:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                logging.error(f'{E.__class__.__name__} with {E.args[0]}', exc_info=True)
+                logging.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=True)
                 self.__non_normal_disconnect(client)
 
     def __send_message(self, client: socket, message: dict):

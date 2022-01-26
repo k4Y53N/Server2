@@ -49,4 +49,3 @@ class Servo(RepeatTimer):
             self.REAR_LEFT.ChangeDutyCycle(r)
             self.REAR_RIGHT.ChangeDutyCycle(r)
 
-        self.reset_time()
