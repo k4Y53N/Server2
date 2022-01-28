@@ -26,7 +26,7 @@ class PWMSimulator(RepeatTimer):
         sleep(frequency * (1 - duty_cycle_percent / 100))
 
     def close_phase(self):
-        GPIO.output(self.__channel, GPIO.LOW)
+        GPIO.cleanup(self.__channel)
 
     def get_status(self):
         return GPIO.input(self.__channel)
@@ -72,14 +72,17 @@ class PWMListener(RepeatTimer):
         RepeatTimer.__init__(self, interval=interval)
         self.pwm = pwm
         self.length = 150
-        self.buffer = deque([False for i in range(self.length)])
+        self.buffer = deque([False for _ in range(self.length)])
 
     def execute_phase(self):
         self.update()
         self.print_status()
 
     def update(self):
-        status = bool(self.pwm.get_status())
+        try:
+            status = bool(self.pwm.get_status())
+        except Exception:
+            status = False
         self.buffer.popleft()
         self.buffer.append(status)
 

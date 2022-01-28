@@ -36,6 +36,6 @@ class RepeatTimer(Thread):
         pass
 
     def set_interval(self, interval: float):
-        if interval <= 0:
-            raise ValueError('interval must bigger than 0')
+        if interval < 0:
+            raise ValueError('interval must greater than 0')
         self.__interval = interval
