@@ -3,5 +3,4 @@ from .Connection import *
 from .Detector import *
 from .Monitor import *
 from .RepeatTimer import *
-from .Servo import *
-from .PWMSimulator import *
+from .PWMController import *

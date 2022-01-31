@@ -78,6 +78,9 @@ class PWMListener(RepeatTimer):
         self.update()
         self.print_status()
 
+    def close_phase(self):
+        print('\n', end='\r')
+
     def update(self):
         try:
             status = bool(self.pwm.get_status())
