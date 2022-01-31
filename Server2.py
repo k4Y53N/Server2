@@ -9,6 +9,11 @@ from unit.utils.util import get_hostname
 from typing import Tuple
 
 
+class SystemInfo:
+    def __init__(self):
+        pass
+
+
 class Server(Thread):
 
     def __init__(self) -> None:

@@ -5,7 +5,7 @@ from Jetson import GPIO
 if __name__ == '__main__':
     GPIO.setmode(GPIO.BOARD)
     m = Monitor()
-    pwm = PWMSimulator(35, 0.2)
+    pwm = PWMSimulator(35, 4)
     listener = PWMListener(pwm, interval=0.1)
     try:
         pwm.change_duty_cycle_percent(50)
