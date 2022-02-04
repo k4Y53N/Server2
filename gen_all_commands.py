@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
-from unit.utils.Commands import *
+from src.utils.Commands import *
 
-cmd_dir = Path('./unit/utils/Commands')
+cmd_dir = Path('src/utils/Commands')
 configs_dir = Path('./configs')
 file_suffix = '*.json'
 

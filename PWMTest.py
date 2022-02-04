@@ -1,5 +1,5 @@
-from unit import PWMSimulator, PWMListener
-from unit import Monitor
+from src import PWMSimulator, PWMListener
+from src import Monitor
 from Jetson import GPIO
 
 if __name__ == '__main__':
