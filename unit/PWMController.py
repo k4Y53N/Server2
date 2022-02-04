@@ -1,8 +1,10 @@
 from Jetson import GPIO
 from .RepeatTimer import RepeatTimer
 from threading import Lock
-from time import sleep
 from collections import deque
+from typing import Tuple
+from time import time, sleep
+import logging as log
 
 
 class PWMSimulator(RepeatTimer):
@@ -96,3 +98,64 @@ class PWMListener(RepeatTimer):
                 print('#', end='')
             else:
                 print('_', end='')
+
+
+class PWMController(RepeatTimer):
+    def __init__(self, channels: Tuple, frequency: float = 0.2):
+        RepeatTimer.__init__(self, interval=0)
+        GPIO.setmode(GPIO.BOARD)
+        self.front_left = PWMSimulator(channels[0], frequency)
+        self.front_right = PWMSimulator(channels[1], frequency)
+        self.rear_left = PWMSimulator(channels[2], frequency)
+        self.rear_right = PWMSimulator(channels[3], frequency)
+        self.angle = PWMSimulator(channels[4], frequency)
+        self.lock = Lock()
+        self.INIT_TIME = 0.
+        self.PWM_RESET_INTERVAL = 1
+        self.SLEEP_INTERVAL = 0.2
+        log.info('PWM Front Left channel: %d' % channels[0])
+        log.info('PWM Front Right channel %d' % channels[1])
+        log.info('PWM Rear Left channel %d' % channels[2])
+        log.info('PWM Rear Right channel %d' % channels[3])
+        log.info('PWM Angle channel %d' % channels[4])
+
+    def init_phase(self) -> None:
+        self.front_left.start()
+        self.front_right.start()
+        self.rear_left.start()
+        self.rear_right.start()
+        self.angle.start()
+        self.reset_time()
+
+    def execute_phase(self):
+        if time() - self.INIT_TIME > self.PWM_RESET_INTERVAL:
+            self.reset()
+        else:
+            sleep(self.SLEEP_INTERVAL)
+
+    def close_phase(self):
+        self.front_left.close()
+        self.front_right.close()
+        self.rear_left.close()
+        self.rear_right.close()
+        self.angle.close()
+        self.front_left.join()
+        self.front_right.join()
+        self.rear_left.join()
+        self.rear_right.join()
+        self.angle.join()
+
+    def set(self, r, theta):
+        pass
+
+    def reset(self):
+        self.front_left.change_duty_cycle_percent(0)
+        self.front_right.change_duty_cycle_percent(0)
+        self.rear_left.change_duty_cycle_percent(0)
+        self.rear_right.change_duty_cycle_percent(0)
+        self.angle.change_duty_cycle_percent(50)
+        self.reset_time()
+
+    def reset_time(self):
+        with self.lock:
+            self.INIT_TIME = time()
