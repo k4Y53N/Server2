@@ -15,7 +15,6 @@ class SystemInfo:
 
 
 class Server(Thread):
-
     def __init__(self) -> None:
         Thread.__init__(self)
         self.__is_running = True

@@ -101,7 +101,7 @@ class PWMListener(RepeatTimer):
 
 
 class PWMController(RepeatTimer):
-    def __init__(self, channels: Tuple, frequency: float = 0.2):
+    def __init__(self, channels: Tuple[int, int, int, int, int], frequency: float = 0.2):
         RepeatTimer.__init__(self, interval=0)
         GPIO.setmode(GPIO.BOARD)
         self.front_left = PWMSimulator(channels[0], frequency)
@@ -128,7 +128,7 @@ class PWMController(RepeatTimer):
         self.reset_time()
 
     def execute_phase(self):
-        if time() - self.INIT_TIME > self.PWM_RESET_INTERVAL:
+        if time() - self.INIT_TIME >= self.PWM_RESET_INTERVAL:
             self.reset()
         else:
             sleep(self.SLEEP_INTERVAL)
@@ -146,14 +146,26 @@ class PWMController(RepeatTimer):
         self.angle.join()
 
     def set(self, r, theta):
-        pass
+        self.reset_time()
+        if r == 0:
+            theta = 90
+        theta %= 360
+        r %= 1
+        l_rotating_speed = r_rotating_speed = r
+        if 180 < theta <= 270:  # L- R+
+            l_rotating_speed = 0
+        elif 270 < theta < 360:  # L+ R-
+            r_rotating_speed = 0
+
+        theta %= 180
+        self.angle.change_duty_cycle_percent(theta / 180 * 100)
+        self.front_left.change_duty_cycle_percent(l_rotating_speed * 100)
+        self.rear_left.change_duty_cycle_percent(l_rotating_speed * 100)
+        self.front_right.change_duty_cycle_percent(r_rotating_speed * 100)
+        self.rear_right.change_duty_cycle_percent(r_rotating_speed * 100)
 
     def reset(self):
-        self.front_left.change_duty_cycle_percent(0)
-        self.front_right.change_duty_cycle_percent(0)
-        self.rear_left.change_duty_cycle_percent(0)
-        self.rear_right.change_duty_cycle_percent(0)
-        self.angle.change_duty_cycle_percent(50)
+        self.set(0, 0)
         self.reset_time()
 
     def reset_time(self):

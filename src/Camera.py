@@ -37,7 +37,6 @@ def gstreamer_pipeline(
 
 
 class Camera:
-
     def __init__(self) -> None:
         self.__cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
         self.__streaming = True
