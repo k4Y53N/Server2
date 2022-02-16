@@ -1,6 +1,6 @@
 import sys
-sys.path.append('./')
-sys.path.append('../')
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
 from src import PWMListener, NoGpioPWMSimulator
 from src import ShellPrinter
 from src import Monitor
