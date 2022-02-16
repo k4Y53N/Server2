@@ -9,9 +9,9 @@ else:
     sys.path.append(str(CWD.parent / 'src'))
     print(sys.path)
 
-from src import PWMListener, NoGpioPWMSimulator
-from src import ShellPrinter
-from src import Monitor
+from .src import PWMListener, NoGpioPWMSimulator
+from .src import ShellPrinter
+from .src import Monitor
 from Jetson import GPIO
 from time import sleep
 
