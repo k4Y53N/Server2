@@ -1,4 +1,5 @@
 import sys
+sys.path.append('../')
 from src import PWMListener, NoGpioPWMSimulator
 from src import ShellPrinter
 from src import Monitor
