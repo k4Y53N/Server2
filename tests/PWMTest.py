@@ -3,15 +3,15 @@ from pathlib import Path
 
 CWD = Path.cwd()
 if (CWD / 'src').is_dir():
-    sys.path.append(str(CWD / 'src'))
+    sys.path.append(str(CWD))
     print(sys.path)
 else:
-    sys.path.append(str(CWD.parent / 'src'))
+    sys.path.append(str(CWD.parent))
     print(sys.path)
 
-from .src import PWMListener, NoGpioPWMSimulator
-from .src import ShellPrinter
-from .src import Monitor
+from src import PWMListener, NoGpioPWMSimulator
+from src import ShellPrinter
+from src import Monitor
 from Jetson import GPIO
 from time import sleep
 
