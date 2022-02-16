@@ -1,6 +1,12 @@
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent))
+
+CWD = Path.cwd()
+if (CWD / 'src').is_dir():
+    sys.path.append(str(CWD / 'src'))
+else:
+    sys.path.append(str(CWD.parent / 'src'))
+
 from src import PWMListener, NoGpioPWMSimulator
 from src import ShellPrinter
 from src import Monitor
