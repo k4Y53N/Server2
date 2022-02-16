@@ -2,6 +2,7 @@ from src import PWMSimulator, PWMListener, NoGpioPWMSimulator
 from src.ShellPrinter import ShellPrinter
 from src import Monitor
 from Jetson import GPIO
+from time import sleep
 
 if __name__ == '__main__':
     GPIO.setmode(GPIO.BOARD)
@@ -15,6 +16,12 @@ if __name__ == '__main__':
         for listener in listeners:
             listener.start()
         printer.start()
+        sleep(20)
+        for pwm in pwms:
+            pwm.close()
+        for listener in listeners:
+            listener.close()
+        printer.close()
     except KeyboardInterrupt:
         pass
     finally:
