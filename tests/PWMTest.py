@@ -4,8 +4,10 @@ from pathlib import Path
 CWD = Path.cwd()
 if (CWD / 'src').is_dir():
     sys.path.append(str(CWD / 'src'))
+    print(sys.path)
 else:
     sys.path.append(str(CWD.parent / 'src'))
+    print(sys.path)
 
 from src import PWMListener, NoGpioPWMSimulator
 from src import ShellPrinter
