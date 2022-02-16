@@ -1,13 +1,12 @@
 import sys
-sys.path.append('../src')
-
-from .src import PWMListener, NoGpioPWMSimulator
-from .src import ShellPrinter
-from .src import Monitor
+from src import PWMListener, NoGpioPWMSimulator
+from src import ShellPrinter
+from src import Monitor
 from Jetson import GPIO
 from time import sleep
 
 if __name__ == '__main__':
+    sys.path.append('../src')
     GPIO.setmode(GPIO.BOARD)
     m = Monitor()
     pwms = [NoGpioPWMSimulator(1, 50, name='NoPWM') for _ in range(4)]
