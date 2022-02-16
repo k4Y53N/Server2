@@ -1,12 +1,12 @@
 import sys
 from pathlib import Path
 
-CWD = Path.cwd()
-if (CWD / 'src').is_dir():
-    sys.path.append(str(CWD))
+__CURRENT_DIR = Path.cwd()
+if (__CURRENT_DIR / 'src').is_dir():
+    sys.path.append(str(__CURRENT_DIR))
     print(sys.path)
 else:
-    sys.path.append(str(CWD.parent))
+    sys.path.append(str(__CURRENT_DIR.parent))
     print(sys.path)
 
 from src import PWMListener, NoGpioPWMSimulator
