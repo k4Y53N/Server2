@@ -1,4 +1,4 @@
-from src import PWMSimulator, PWMListener, NoGpioPWMSimulator
+from src.PWMController import PWMListener, NoGpioPWMSimulator
 from src.ShellPrinter import ShellPrinter
 from src import Monitor
 from Jetson import GPIO
