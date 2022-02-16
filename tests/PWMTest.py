@@ -1,3 +1,6 @@
+import sys
+sys.path.append('../src')
+
 from src.PWMController import PWMListener, NoGpioPWMSimulator
 from src.ShellPrinter import ShellPrinter
 from src import Monitor

@@ -1,3 +1,6 @@
+import sys
+
+sys.path.append('../src')
 from time import sleep
 from src import Monitor
 
