@@ -1,44 +1,43 @@
-import json
 from pathlib import Path
-import numpy as np
-from threading import Thread
+from threading import Thread, Lock
 from .utils.Commands import CONFIGS
+import numpy as np
+import tensorflow as tf
+import json
 
-configs_dir = Path('../configs')
-file_suffix = '*.json'
+_config_suffix = '*.json'
+
+
+def load_configs(config_dir: Path):
+    configs = CONFIGS.copy()
+    for p in config_dir.glob(_config_suffix):
+        with p.open() as f:
+            config = json.load(f)
+
+        configs['CONFIGS'][config.name] = {
+            'SIZE': config['SIZE'],
+            'MODEL_TYPE': config['model_type'],
+            'TINY': config['TINY'],
+            'CLASSES': config['YOLO']['CLASSES']
+        }
+    return configs
 
 
 class Detector:
-    def __init__(self) -> None:
-        self.configs = self.load_configs()
-
-    @staticmethod
-    def load_configs(*args, **kwargs):
-        configs = CONFIGS.copy()
-
-        for PATH in configs_dir.glob(file_suffix):
-            with PATH.open() as f:
-                config = json.load(f)
-
-            configs['CONFIGS'][PATH.name] = {
-                'SIZE': config['size'],
-                'MODEL_TYPE': config['model_type'],
-                'TINY': config['tiny'],
-                'CLASSES': config['YOLO']['CLASSES'],
-            }
-
-        return configs
+    def __init__(self, config_dir: Path) -> None:
+        self.configs = load_configs(config_dir)
+        self.lock = Lock()
+        self.model = None
+        self.size = None
+        self.classes = None
 
     def get_configs(self, *args, **kwargs) -> dict:
         return self.configs
 
-    def get_config(self):
-        pass
+    def get_config(self, config_name):
+        return self.configs['CONFIGS'].get(config_name, {})
 
-    def set_config(self, command: dict, *args, **kwargs):
-        pass
-
-    def set_infer(self, command: dict, *args, **kwargs):
+    def set_config(self, config_name: str):
         pass
 
     def infer_thread(self, dest_dic: dict, dic_key: str, image, *args):
@@ -65,4 +64,4 @@ class Detector:
 
 
 if __name__ == '__main__':
-    print(Detector.load_configs())
+    pass

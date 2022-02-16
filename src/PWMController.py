@@ -8,7 +8,7 @@ import logging as log
 
 
 class PWMSimulator(RepeatTimer):
-    def __init__(self, channel, frequency):
+    def __init__(self, channel, frequency, name='PWM'):
         RepeatTimer.__init__(self, interval=0)
         if frequency < 0:
             raise ValueError('Frequency must greater than 0')
@@ -16,7 +16,16 @@ class PWMSimulator(RepeatTimer):
         self.__channel = channel
         self.__frequency = frequency
         self.__duty_cycle_percent = 0
+        self.name = name
         GPIO.setup(self.__channel, GPIO.OUT)
+
+    def __str__(self):
+        with self.__lock:
+            frequency = self.__frequency
+            duty_cycle_percent = self.__duty_cycle_percent
+            name = self.name
+            channel = self.__channel
+        return 'name: %s ch: %d frequency: %3.2f duty_cycle: %3.2f%%' % (name, channel, frequency, duty_cycle_percent)
 
     def execute_phase(self):
         with self.__lock:
@@ -46,13 +55,27 @@ class PWMSimulator(RepeatTimer):
             self.__frequency = frequency
 
 
-class DigitalPWMSimulator(RepeatTimer):
-    def __init__(self, frequency, duty_cycle_percent):
+class NoGpioPWMSimulator(RepeatTimer):
+    """
+        this class didn't use GPIO just for testing
+    """
+
+    def __init__(self, frequency, duty_cycle_percent, name='PWM'):
         RepeatTimer.__init__(self, interval=0)
         self.__lock = Lock()
         self.status = False
+        self.channel = 0
+        self.name = name
         self.__frequency = frequency
         self.__duty_cycle_percent = duty_cycle_percent
+
+    def __str__(self):
+        with self.__lock:
+            name = self.name
+            channel = self.channel
+            frequency = self.__frequency
+            duty_cycle_percent = self.__duty_cycle_percent
+        return 'name: %s ch: %d frequency: %3.2f duty_cycle: %3.2f%%' % (name, channel, frequency, duty_cycle_percent)
 
     def execute_phase(self):
         with self.__lock:
@@ -70,15 +93,25 @@ class DigitalPWMSimulator(RepeatTimer):
 
 
 class PWMListener(RepeatTimer):
-    def __init__(self, pwm: PWMSimulator, interval=0.1):
+    def __init__(self, pwm: PWMSimulator, interval=0.1, buffer_size=100):
         RepeatTimer.__init__(self, interval=interval)
+        self.lock = Lock()
         self.pwm = pwm
-        self.length = 150
-        self.buffer = deque([False for _ in range(self.length)])
+        self.buffer_size = buffer_size
+        self.buffer = deque([False for _ in range(self.buffer_size)])
+
+    def __str__(self):
+        s = str(self.pwm) + ' || '
+        with self.lock:
+            for b in self.buffer:
+                if b:
+                    s += '#'
+                else:
+                    s += '_'
+        return s
 
     def execute_phase(self):
         self.update()
-        self.print_status()
 
     def close_phase(self):
         print('\n', end='\r')
@@ -88,16 +121,15 @@ class PWMListener(RepeatTimer):
             status = bool(self.pwm.get_status())
         except Exception:
             status = False
-        self.buffer.popleft()
-        self.buffer.append(status)
+        with self.lock:
+            self.buffer.popleft()
+            self.buffer.append(status)
 
-    def print_status(self):
-        print('\r', end='')
-        for s in self.buffer:
-            if s:
-                print('#', end='')
-            else:
-                print('_', end='')
+    def print(self):
+        print('\r%s' % self.__str__(), end='')
+
+    def println(self):
+        print('\r%s' % self.__str__())
 
 
 class PWMController(RepeatTimer):
