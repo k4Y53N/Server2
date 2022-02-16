@@ -1,25 +1,33 @@
-from src import PWMSimulator, PWMListener
+from src import PWMSimulator, PWMListener, NoGpioPWMSimulator
+from src.ShellPrinter import ShellPrinter
 from src import Monitor
 from Jetson import GPIO
 
 if __name__ == '__main__':
     GPIO.setmode(GPIO.BOARD)
     m = Monitor()
-    pwm = PWMSimulator(35, 4)
-    listener = PWMListener(pwm, interval=0.1)
+    pwms = [NoGpioPWMSimulator(1, 50, name='NoPWM') for _ in range(4)]
+    listeners = [PWMListener(pwm) for pwm in pwms]
+    printer = ShellPrinter(*listeners)
     try:
-        pwm.change_duty_cycle_percent(50)
-
-        m.start()
-        pwm.start()
-        listener.start()
-        m.set_row_string(0, 'HelloPwm')
-        pwm.join()
-        listener.join()
-        m.join()
+        for pwm in pwms:
+            pwm.start()
+        for listener in listeners:
+            listener.start()
+        printer.start()
     except KeyboardInterrupt:
-        pwm.close()
-        listener.close()
-        m.close()
+        pass
+    finally:
+        for pwm in pwms:
+            pwm.close()
+        for listener in listeners:
+            listener.close()
+        printer.close()
+
+        for pwm in pwms:
+            pwm.join()
+        for listener in listeners:
+            listener.join()
+        printer.join()
 
     exit(0)
