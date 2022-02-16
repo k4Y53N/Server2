@@ -1,9 +1,9 @@
 import sys
 sys.path.append('../src')
 
-from src import PWMListener, NoGpioPWMSimulator
-from src import ShellPrinter
-from src import Monitor
+from .src import PWMListener, NoGpioPWMSimulator
+from .src import ShellPrinter
+from .src import Monitor
 from Jetson import GPIO
 from time import sleep
 
