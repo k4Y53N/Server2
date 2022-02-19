@@ -174,7 +174,7 @@ class PWMController(RepeatTimer):
         if self.is_listen:
             return str(self.listener)
 
-        return "%s\n%s\n%s\n%s\n%s\n" % (
+        return "%s\n%s\n%s\n%s\n%s" % (
             str(self.front_left),
             str(self.front_right),
             str(self.rear_left),
