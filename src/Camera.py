@@ -143,7 +143,7 @@ class Camera2(RepeatTimer):
         pass
 
     def execute_phase(self):
-        pass
+        self.__ret, self.__image = self.__cap.read()
 
     def close_phase(self):
         self.__cap.release()
