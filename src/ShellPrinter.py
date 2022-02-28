@@ -54,6 +54,9 @@ class WindowsShellPrinter(Printer):
     def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
 
+    def init_phase(self):
+        os.system('cls')
+
     def get_cpu_usage(self):
         cmd = ''
         with os.popen(cmd, 'r') as f:
@@ -68,6 +71,9 @@ class WindowsShellPrinter(Printer):
 class LinuxShellPrinter(Printer):
     def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
+
+    def init_phase(self):
+        os.system('clear')
 
     def get_cpu_usage(self) -> str:
         # cpu user nice system idle iowait ...
