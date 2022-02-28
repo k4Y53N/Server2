@@ -25,10 +25,10 @@ class Printer(RepeatTimer):
     def execute_phase(self):
         self.clean_screen()
         if self.show_usage:
-            print(self.get_cpu_usage())
-            print(self.get_memory_usage())
+            print(self.get_cpu_usage(), end='\n\033[J')
+            print(self.get_memory_usage(), end='\n\033[J')
         for obj in self.objs:
-            print('%s\033[J' % obj)
+            print(obj, end='\n\033[J')
 
     @staticmethod
     def clean_screen():
