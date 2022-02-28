@@ -4,11 +4,23 @@ from .RepeatTimer import RepeatTimer
 from typing import Iterable
 
 
+def bar(bar_width, percent, char='#', blank_char=' ') -> str:
+    percent %= 101
+    char_width = round(bar_width * percent / 100)
+    blank_width = bar_width - char_width
+    return '%3d%% | %s%s |' % (
+        percent,
+        char * char_width,
+        blank_char * blank_width
+    )
+
+
 class Printer(RepeatTimer):
     def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
         RepeatTimer.__init__(self, interval=interval)
         self.show_usage = show_usage
         self.objs = printable_objs
+        self.bar_width = 30
 
     def execute_phase(self):
         self.clean_screen()
@@ -18,28 +30,29 @@ class Printer(RepeatTimer):
         for obj in self.objs:
             print(obj)
 
+    @staticmethod
+    def clean_screen():
+        print('\033[H\033[3J', end='')
+
     def close_phase(self):
         del self.objs
 
     def set_show_usage(self, show_usage: bool):
         self.show_usage = show_usage
 
-    def clean_screen(self):
+    def get_cpu_usage(self) -> str:
         pass
 
-    def get_cpu_usage(self):
+    def get_memory_usage(self) -> str:
         pass
 
-    def get_memory_usage(self):
-        pass
+    def bar(self, percent, char='#', blank_char=' ') -> str:
+        return bar(self.bar_width, percent, char, blank_char)
 
 
 class WindowsShellPrinter(Printer):
     def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
-
-    def clean_screen(self):
-        os.system('cls')
 
     def get_cpu_usage(self):
         cmd = ''
@@ -56,23 +69,36 @@ class LinuxShellPrinter(Printer):
     def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
 
-    def clean_screen(self):
-        os.system('clear')
-
-    def get_cpu_usage(self):
+    def get_cpu_usage(self) -> str:
         # cpu user nice system idle iowait ...
         # grep 'cpu ' /proc/stat | awk '{print ($2+$4) / ($2+$4+$5) * 100}'
         cmd = r"grep 'cpu ' /proc/stat | awk '{print ($2+$4) / ($2+$4+$5) * 100}' "
-        with os.popen(cmd, 'r') as f:
-            cpu_usage = f.readline()
         try:
-            cpu_usage = str(round(float(cpu_usage), 2))
-            return cpu_usage
-        except ValueError as e:
-            return '0.00%'
+            with os.popen(cmd, 'r') as f:
+                cpu_usage = f.readline()
+            percent = round(float(cpu_usage))
+        except Exception as E:
+            return 'Fail to get Memory usage %s' % E.args[0]
 
-    def get_memory_usage(self):
-        pass
+        return self.bar(percent) + ' CPU'
+
+    def get_memory_usage(self) -> str:
+        # free -t -m | grep 'Mem\|Swap' | awk '{print $2} {print $3}'
+        cmd = r"free -t -m | grep 'Mem\|Swap' | awk '{print $2} {print $3}'"
+        try:
+            with os.popen(cmd, 'r') as f:
+                mem_used, mem_free, swap_used, swap_free = f.readlines()
+            mem_used = round(float(mem_used))
+            mem_free = round(float(mem_free))
+            swap_used = round(float(swap_used))
+            swap_free = round(float(swap_free))
+        except Exception as E:
+            return 'Fail to get Memory usage %s' % E.args[0]
+
+        return '%s\n%s' % (
+            self.bar(mem_used / mem_free * 100) + ' %dMb / %dMb Mem' % (mem_used, mem_free),
+            self.bar(swap_used / swap_free * 100) + ' %dMb / %dMb Swap' % (swap_used, swap_free)
+        )
 
 
 class ShellPrinter(RepeatTimer):
@@ -84,7 +110,7 @@ class ShellPrinter(RepeatTimer):
         if sys.platform.startswith('win'):
             os.system('cls')
         else:
-            print("\033[H\033[J", end="")
+            print('\033[H\033[3J', end="")
         for obj in self.objs:
             print(obj)
 
