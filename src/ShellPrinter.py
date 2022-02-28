@@ -102,17 +102,7 @@ class LinuxShellPrinter(Printer):
 
 
 class ShellPrinter(RepeatTimer):
-    def __init__(self, *printable_objs):
-        RepeatTimer.__init__(self, interval=0.1)
-        self.objs = printable_objs
-
-    def execute_phase(self):
-        if sys.platform.startswith('win'):
-            os.system('cls')
-        else:
-            print('\033[H\033[3J', end="")
-        for obj in self.objs:
-            print(obj)
-
-    def close_phase(self):
-        del self.objs
+    def __new__(cls, *args, **kwargs):
+        if sys.platform.startswith('linux'):
+            return LinuxShellPrinter(printable_objs=args, interval=0.1, show_usage=True)
+        return WindowsShellPrinter(printable_objs=args, interval=0.1, show_usage=True)
