@@ -95,9 +95,9 @@ class LinuxShellPrinter(Printer):
         except Exception as E:
             return 'Fail to get Memory usage %s' % E.args[0]
 
-        return '%s\n%s' % (
+        return '%s' % (
             self.bar(mem_used / mem_free * 100) + ' %dMb / %dMb Mem' % (mem_used, mem_free),
-            self.bar(swap_used / swap_free * 100) + ' %dMb / %dMb Swap' % (swap_used, swap_free)
+            # self.bar(swap_used / swap_free * 100) + ' %dMb / %dMb Swap' % (swap_used, swap_free)
         )
 
 
