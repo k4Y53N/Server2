@@ -28,7 +28,7 @@ class Printer(RepeatTimer):
             print(self.get_cpu_usage())
             print(self.get_memory_usage())
         for obj in self.objs:
-            print('\033[J%s' % obj)
+            print('%s\033[J' % obj)
 
     @staticmethod
     def clean_screen():
