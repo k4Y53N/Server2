@@ -32,7 +32,7 @@ class Printer(RepeatTimer):
 
     @staticmethod
     def clean_screen():
-        print("\033[H\033[2J", end="")
+        print("\033[H\033[J", end="")
 
     def close_phase(self):
         del self.objs
