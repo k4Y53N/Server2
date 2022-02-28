@@ -84,7 +84,7 @@ class LinuxShellPrinter(Printer):
 
     def get_memory_usage(self) -> str:
         # free -t -m | grep 'Mem\|Swap' | awk '{print $2} {print $3}'
-        cmd = r"free -t -m | grep 'Mem\|Swap' | awk '{print $2} {print $3}'"
+        cmd = r"free -t -m | grep 'Mem\|Swap' | awk '{print $3} {print $4}'"
         try:
             with os.popen(cmd, 'r') as f:
                 mem_used, mem_free, swap_used, swap_free = f.readlines()
@@ -95,9 +95,9 @@ class LinuxShellPrinter(Printer):
         except Exception as E:
             return 'Fail to get Memory usage %s' % E.args[0]
 
-        return '%s' % (
+        return '%s\n%s' % (
             self.bar(mem_used / mem_free * 100) + ' %dMb / %dMb Mem' % (mem_used, mem_free),
-            # self.bar(swap_used / swap_free * 100) + ' %dMb / %dMb Swap' % (swap_used, swap_free)
+            self.bar(swap_used / swap_free * 100) + ' %dMb / %dMb Swap' % (swap_used, swap_free)
         )
 
 
