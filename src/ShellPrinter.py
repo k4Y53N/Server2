@@ -104,5 +104,5 @@ class LinuxShellPrinter(Printer):
 class ShellPrinter(RepeatTimer):
     def __new__(cls, *args, **kwargs):
         if sys.platform.startswith('linux'):
-            return LinuxShellPrinter(printable_objs=args, interval=0.1, show_usage=True)
-        return WindowsShellPrinter(printable_objs=args, interval=0.1, show_usage=True)
+            return LinuxShellPrinter(printable_objs=args, interval=0.2, show_usage=True)
+        return WindowsShellPrinter(printable_objs=args, interval=0.2, show_usage=True)
