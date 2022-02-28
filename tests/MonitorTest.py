@@ -9,7 +9,7 @@ else:
     sys.path.append(str(__CURRENT_DIR.parent))
     print(sys.path)
 from time import sleep
-from src import Monitor
+from src.Monitor import Monitor
 
 if __name__ == '__main__':
 
