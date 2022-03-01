@@ -103,12 +103,12 @@ class Camera(RepeatTimer):
         return self.__width, self.__height
 
     def set_quality(self, width, height):
-        self.__width = width
-        self.__height = height
+        self.__width = int(width)
+        self.__height = int(height)
 
     def reset(self):
-        self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, _width)
-        self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _height)
+        self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     def get_b64image(self, image):
         return encode_image_to_b64(image, (self.__width, self.__height))
