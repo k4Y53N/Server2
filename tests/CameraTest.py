@@ -18,7 +18,8 @@ if __name__ == '__main__':
     try:
         camera.start()
         printer.start()
-        sleep(100)
+        sleep(5)
+        camera.set_quality(500, 500)
         camera.close()
         printer.close()
     except Exception:
