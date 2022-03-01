@@ -28,7 +28,7 @@ class Printer(RepeatTimer):
             print(self.get_cpu_usage())
             print(self.get_memory_usage())
         for obj in self.objs:
-            print(obj, end='\n')
+            print(obj)
 
     @staticmethod
     def clean_screen():
@@ -73,7 +73,7 @@ class LinuxShellPrinter(Printer):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
 
     def init_phase(self):
-        os.system('clear')
+        print("\033[H\033[J", end='')
 
     def get_cpu_usage(self) -> str:
         # cpu user nice system idle iowait ...
