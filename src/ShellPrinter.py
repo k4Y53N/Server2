@@ -25,10 +25,10 @@ class Printer(RepeatTimer):
     def execute_phase(self):
         self.clean_screen()
         if self.show_usage:
-            print(self.get_cpu_usage())
-            print(self.get_memory_usage())
+            print('\r' + self.get_cpu_usage())
+            print('\r' + self.get_memory_usage())
         for obj in self.objs:
-            print(obj)
+            print('\r' + obj)
 
     @staticmethod
     def clean_screen():
@@ -76,8 +76,8 @@ class LinuxShellPrinter(Printer):
         os.system('clear')
 
     def clean_screen(self):
-        os.system('clear')
-        # print("\033[H\033[J", end='')
+        # os.system('clear')
+        print("\033[H\033[J", end='')
         # print('\n' * 100)
 
     def get_cpu_usage(self) -> str:
