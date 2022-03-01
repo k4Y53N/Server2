@@ -40,7 +40,7 @@ def gstreamer_pipeline(
 
 
 def encode_image_to_b64(image: np.ndarray, size: Tuple[int, int]) -> str:
-    if image.shape != size:
+    if image.shape != (size[1], size[0], 3):
         image = cv2.resize(image, size)
     ret, jpg = cv2.imencode('.jpg', image)
     if not ret:
@@ -96,7 +96,7 @@ class Camera(RepeatTimer):
         if (not self.__ret) or self.__image is None:
             return False, None
         if self.__image.shape != (self.__height, self.__width, 3):
-            return self.__ret, cv2.resize(self.__image, (self.__height, self.__width))
+            return self.__ret, cv2.resize(self.__image, (self.__width, self.__height))
         return self.__ret, self.__image
 
     def get_quality(self):
