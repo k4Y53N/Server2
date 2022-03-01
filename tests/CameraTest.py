@@ -8,12 +8,12 @@ if (__CURRENT_DIR / 'src').is_dir():
 else:
     sys.path.append(str(__CURRENT_DIR.parent))
     print(sys.path)
-from src.Camera import Camera2
+from src.Camera import Camera
 from src.ShellPrinter import ShellPrinter
 from time import sleep
 
 if __name__ == '__main__':
-    camera = Camera2()
+    camera = Camera()
     printer = ShellPrinter(camera)
     try:
         camera.start()
