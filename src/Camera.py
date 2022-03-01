@@ -56,8 +56,8 @@ class Camera(RepeatTimer):
         log.info('Camera open successful')
         self.__FPS = self.__cap.get(cv2.CAP_PROP_FPS)
         self.__delay = 1 / self.__FPS
-        self.__width = self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.__height = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.__ret = False
         self.__image: np.ndarray = None
         self.lightness_text = " .:-=+*#%@"
