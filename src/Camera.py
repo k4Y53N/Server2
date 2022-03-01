@@ -85,10 +85,7 @@ class Camera(RepeatTimer):
         pass
 
     def execute_phase(self):
-        ret, image = self.__cap.read()
-        if image.shape != (self.__width, self.__height, 3):
-            image = cv2.resize(image, self.__width, self.__height)
-        self.__ret, self.__image = ret, image
+        self.__ret, self.__image = self.__cap.read()
 
     def close_phase(self):
         self.__cap.release()
