@@ -1,19 +1,20 @@
 import logging as log
 from socket import socket, AF_INET, SOCK_STREAM, timeout
 from queue import Queue, Full, Empty
-from threading import Thread, Lock, Event
+from threading import Thread, Lock
 from json import loads, dumps
 from struct import calcsize, pack, unpack
 from typing import Union, Tuple
+from .RepeatTimer import RepeatTimer
 
 
 class VerificationError(Exception):
     pass
 
 
-class Connection(Thread):
-    def __init__(self, ip: str = 'localhost', port: int = 0) -> None:
-        Thread.__init__(self)
+class Connection(RepeatTimer):
+    def __init__(self, ip, port, exc_info=False):
+        RepeatTimer.__init__(self, interval=0)
         self.__format = 'utf-8'
         self.__header_format = '>i'
         self.__header_size = calcsize(self.__header_format)
@@ -24,30 +25,34 @@ class Connection(Thread):
         self.__input_buffer = Queue()
         self.__output_buffer = Queue()
         self.__server_address = self.__server_sock.getsockname()
+        self.exc_info = exc_info
         self.__client_address = None
-        self.__connect_event = Event()
-        self.__client_connect_event = Event()
+        self.__is_client_connect = True
 
-    def run(self):
+    def init_phase(self):
         self.__server_sock.settimeout(300)
         self.__server_sock.listen(1)
         log.info('Connection Server Address => %s:%d' % self.__server_address)
 
-        while not self.__connect_event.wait(0):
-            try:
-                log.info('Waiting Client Connect...')
-                client, address = self.__server_sock.accept()
-                self.__handle_client(client, address)
-            except VerificationError as VE:
-                log.warning('Verification Fail %s' % VE.args[0], exc_info=True)
-            except (OSError, KeyboardInterrupt, timeout, Exception) as E:
-                log.error(E.__class__.__name__, exc_info=True)
-            else:
-                client.close()
-            finally:
-                self.__reset()
+    def execute_phase(self):
+        try:
+            log.info('Waiting Client Connect...')
+            client, address = self.__server_sock.accept()
+            self.__handle_client(client, address)
+        except VerificationError as VE:
+            log.warning('Verification Fail %s' % VE.args[0], exc_info=self.exc_info)
+        except (OSError, KeyboardInterrupt, timeout, Exception) as E:
+            self.close()
+            log.error(E.__class__.__name__, exc_info=self.exc_info)
+        else:
+            client.close()
+        finally:
+            self.__reset()
 
-        self.close()
+    def close_phase(self):
+        self.__reset()
+        self.__is_client_connect = False
+        self.__server_sock.close()
 
     def __handle_client(self, client: socket, address: Tuple[str, int]):
         try:
@@ -64,11 +69,8 @@ class Connection(Thread):
         except Exception as E:
             raise E
 
-    def __verify(self):
-        pass
-
     def __listening(self, client: socket):
-        while not self.__client_connect_event.wait(0):
+        while self.__is_client_connect and self.is_running():
             try:
                 message, address = self.__recv_message(client), client.getpeername()
                 if message['CMD'] in self.__connect_keyword:
@@ -78,7 +80,7 @@ class Connection(Thread):
             except Full:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                log.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=True)
+                log.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=self.exc_info)
                 self.__non_normal_disconnect(client)
 
     def __recv_message(self, client: socket) -> dict:
@@ -100,7 +102,7 @@ class Connection(Thread):
         return buffer
 
     def __sending(self, client: socket):
-        while not self.__client_connect_event.wait(0):
+        while self.__is_client_connect and self.is_running():
             try:
                 msg_bytes, address = self.__output_buffer.get(True, 0.2)
                 if address != client.getpeername():
@@ -109,7 +111,7 @@ class Connection(Thread):
             except Empty:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                log.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=True)
+                log.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=self.exc_info)
                 self.__non_normal_disconnect(client)
 
     def __send_message(self, client: socket, message: dict):
@@ -129,16 +131,16 @@ class Connection(Thread):
             total_send += sent
 
     def __non_normal_disconnect(self, client: socket):
-        self.__client_connect_event.set()
+        self.__is_client_connect = False
         client.close()
 
     def __normal_disconnect(self, client: socket, connection_ctrl: dict):
-        self.__client_connect_event.set()
+        self.__is_client_connect = False
         client.close()
 
     def __reset(self):
         self.__clear_buffer()
-        self.__client_connect_event.clear()
+        self.__is_client_connect = True
         self.__client_address = None
 
     def __clear_buffer(self):
@@ -155,12 +157,6 @@ class Connection(Thread):
 
     def __exit(self):
         pass
-
-    def close(self):
-        self.__reset()
-        self.__connect_event.set()
-        self.__client_connect_event.set()
-        self.__server_sock.close()
 
     def get(self, time_limit: float = 0.2) -> Tuple[dict, Tuple[str, int]]:
         try:
@@ -182,4 +178,4 @@ class Connection(Thread):
         return self.__client_address
 
     def is_connect(self) -> bool:
-        return not self.__connect_event.is_set()
+        return self.is_running()

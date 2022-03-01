@@ -42,3 +42,6 @@ class RepeatTimer(Thread):
 
     def get_interval(self) -> float:
         return self.__interval
+
+    def is_running(self) -> bool:
+        return not self.__event.is_set()
