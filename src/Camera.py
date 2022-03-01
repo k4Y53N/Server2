@@ -99,12 +99,19 @@ class Camera(RepeatTimer):
         return self.__width, self.__height
 
     def set_quality(self, width, height):
-        self.__width = width
-        self.__height = height
+        try:
+            self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+        except Exception as E:
+            log.error('Cannot set value to camera', exc_info=E)
+            self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, _width)
+            self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _height)
+        self.__width = self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.__height = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     def reset(self):
-        self.__width = _width
-        self.__height = _height
+        self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, _width)
+        self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _height)
 
     def get_b64image(self, image):
         return encode_image_to_b64(image, (self.__width, self.__height))
