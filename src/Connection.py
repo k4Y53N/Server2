@@ -29,6 +29,9 @@ class Connection(RepeatTimer):
         self.__client_address = None
         self.__is_client_connect = True
 
+    def __str__(self):
+        return 'Server address: %s | Client address: %s' % (self.__server_address, self.__client_address)
+
     def init_phase(self):
         self.__server_sock.settimeout(300)
         self.__server_sock.listen(1)
