@@ -59,7 +59,7 @@ class Camera(RepeatTimer):
         self.__width = self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.__height = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self.__ret = False
-        self.__image = None
+        self.__image: np.ndarray = None
         self.lightness_text = " .:-=+*#%@"
         self.light_lv = len(self.lightness_text) - 1
         RepeatTimer.__init__(self, interval=0.)
@@ -93,21 +93,18 @@ class Camera(RepeatTimer):
         self.__image = None
 
     def get(self):
-        return self.__ret, self.__image
+        if (not self.__ret) or self.__image is None:
+            return False, None
+        if self.__image.shape != (self.__width, self.__height, 3):
+            return self.__ret, cv2.resize(self.__image, (self.__width, self.__height))
+        return self.__ret, self.__height
 
     def get_quality(self):
         return self.__width, self.__height
 
     def set_quality(self, width, height):
-        try:
-            self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-            self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        except Exception as E:
-            log.error('Cannot set value to camera', exc_info=E)
-            self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, _width)
-            self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _height)
-        self.__width = self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.__height = self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.__width = width
+        self.__height = height
 
     def reset(self):
         self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, _width)
