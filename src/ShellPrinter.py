@@ -76,8 +76,9 @@ class LinuxShellPrinter(Printer):
         os.system('clear')
 
     def clean_screen(self):
+        os.system('clear')
         # print("\033[H\033[J", end='')
-        print('\n' * 100)
+        # print('\n' * 100)
 
     def get_cpu_usage(self) -> str:
         # cpu user nice system idle iowait ...
