@@ -95,9 +95,9 @@ class Camera(RepeatTimer):
     def get(self):
         if (not self.__ret) or self.__image is None:
             return False, None
-        if self.__image.shape != (self.__width, self.__height, 3):
-            return self.__ret, cv2.resize(self.__image, (self.__width, self.__height))
-        return self.__ret, self.__height
+        if self.__image.shape != (self.__height, self.__width, 3):
+            return self.__ret, cv2.resize(self.__image, (self.__height, self.__width))
+        return self.__ret, self.__image
 
     def get_quality(self):
         return self.__width, self.__height
