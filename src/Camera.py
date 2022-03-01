@@ -86,9 +86,7 @@ class Camera(RepeatTimer):
 
     def execute_phase(self):
         ret, image = self.__cap.read()
-        if not ret:
-            self.__ret, self.__image = False, None
-        if image.shape != (self.__width, self.__height):
+        if image.shape != (self.__width, self.__height, 3):
             image = cv2.resize(image, self.__width, self.__height)
         self.__ret, self.__image = ret, image
 
@@ -110,8 +108,6 @@ class Camera(RepeatTimer):
     def reset(self):
         self.__width = _width
         self.__height = _height
-        self.__cap.set(cv2.CAP_PROP_FRAME_WIDTH, _width)
-        self.__cap.set(cv2.CAP_PROP_FRAME_HEIGHT, _height)
 
     def get_b64image(self, image):
         return encode_image_to_b64(image, (self.__width, self.__height))
