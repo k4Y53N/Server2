@@ -65,7 +65,7 @@ class Camera(RepeatTimer):
         RepeatTimer.__init__(self, interval=0.)
 
     def __str__(self):
-        s = 'FPS: %f  Delay: %f  Width: %d  Height: %d\n' % (self.__FPS, self.__delay, self.__width, self.__height)
+        s = 'FPS: %d  Delay: %f  Width: %d  Height: %d\n' % (self.__FPS, self.__delay, self.__width, self.__height)
         ret, image = self.__ret, self.__image
         if not ret:
             s += '**NO IMAGE**'
