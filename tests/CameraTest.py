@@ -20,6 +20,7 @@ if __name__ == '__main__':
         printer.start()
         sleep(5)
         camera.set_quality(500, 500)
+        sleep(55)
         camera.close()
         printer.close()
     except Exception:
