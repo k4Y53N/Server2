@@ -73,7 +73,10 @@ class LinuxShellPrinter(Printer):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
 
     def init_phase(self):
-        print("\033[H\033[J", end='')
+        os.system('clear')
+
+    def clean_screen(self):
+        print("\033[H\033[3J", end='')
 
     def get_cpu_usage(self) -> str:
         # cpu user nice system idle iowait ...
