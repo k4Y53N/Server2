@@ -3,7 +3,6 @@ import logging as log
 import numpy as np
 from base64 import b64encode
 from .RepeatTimer import RepeatTimer
-from typing import Tuple
 
 _width = 1280
 _height = 720
@@ -37,15 +36,6 @@ def gstreamer_pipeline(
                 display_height,
             )
     )
-
-
-def encode_image_to_b64(image: np.ndarray, size: Tuple[int, int]) -> str:
-    if image.shape != (size[1], size[0], 3):
-        image = cv2.resize(image, size)
-    ret, jpg = cv2.imencode('.jpg', image)
-    if not ret:
-        return ''
-    return b64encode(jpg.tobytes()).decode()
 
 
 class Camera(RepeatTimer):
@@ -110,5 +100,9 @@ class Camera(RepeatTimer):
         self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    def get_b64image(self, image):
-        return encode_image_to_b64(image, (self.__width, self.__height))
+    @staticmethod
+    def get_b64image(image: np.ndarray):
+        ret, jpg = cv2.imencode('.jpg', image)
+        if not ret:
+            return ''
+        return b64encode(jpg.tobytes()).decode()
