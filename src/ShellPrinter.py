@@ -85,25 +85,27 @@ class LinuxShellPrinter(Printer):
         except Exception as E:
             return 'Fail to get Memory usage %s' % E.args[0]
 
-        return self.bar(percent) + ' CPU'
+        return (self.bar(percent) + ' CPU').rstrip()
 
     def get_memory_usage(self) -> str:
         # free -m | grep ':' | awk '{print $1, $2, $3}'
         cmd = "free -m | grep ':' | awk '{print $1, $2, $3}'"
         s = ''
         try:
-            with os.popen('cmd', 'r') as f:
+            with os.popen(cmd, 'r') as f:
                 usages = [
                     [s for s in line.strip().split()]
                     for line in f.readlines()
                 ]
             for name, total, used in usages:
                 name = name[:len(name) - 1]
+                total = int(total)
+                used = int(used)
                 s += self.bar(used / total * 100) + ' %dMB / %dMB %s\n' % (used, total, name)
         except Exception as E:
             return 'Fail to get Memory usage %s' % str(E.args[0])
 
-        return s
+        return s.rstrip()
 
 
 class ShellPrinter(RepeatTimer):
