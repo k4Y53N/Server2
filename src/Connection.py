@@ -42,13 +42,12 @@ class Connection(RepeatTimer):
             log.info('Waiting Client Connect...')
             client, address = self.__server_sock.accept()
             self.__handle_client(client, address)
+            client.close()
         except VerificationError as VE:
-            log.warning('Verification Fail %s' % VE.args[0], exc_info=self.exc_info)
+            log.warning(f'Verification fain {VE.__class__.__name__}', exc_info=self.exc_info)
         except (OSError, KeyboardInterrupt, timeout, Exception) as E:
             self.close()
-            log.error(E.__class__.__name__, exc_info=self.exc_info)
-        else:
-            client.close()
+            log.error(f'Server socket accept fail {E.__class__.__name__}', exc_info=self.exc_info)
         finally:
             self.__reset()
 
@@ -83,7 +82,7 @@ class Connection(RepeatTimer):
             except Full:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                log.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=self.exc_info)
+                log.error(f'client socket listening fail {E.__class__.__name__}', exc_info=self.exc_info)
                 self.__non_normal_disconnect(client)
 
     def __recv_message(self, client: socket) -> dict:
@@ -110,19 +109,33 @@ class Connection(RepeatTimer):
                 msg_bytes, address = self.__output_buffer.get(True, 0.2)
                 if address != client.getpeername():
                     continue
-                self.__send_message(client, msg_bytes)
+                self.__send_message(client, msg_bytes, block=False)
             except Empty:
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
-                log.error(f'{E.__class__.__name__} with {E.__args[0]}', exc_info=self.exc_info)
+                log.error(f'client socket sending fail {E.__class__.__name__}', exc_info=self.exc_info)
                 self.__non_normal_disconnect(client)
 
-    def __send_message(self, client: socket, message: dict):
-        with self.__send_lock:
+    def __send_message(self, client: socket, message: dict, block=False):
+        """
+        send message to cline socket
+        :param client: client socket
+        :param message: dictionary can be parsed to json format
+        :param block: if block = false will skip when didn't get the lock
+        :return:
+        """
+        acquired = self.__send_lock.acquire(block)
+        if not acquired:
+            return
+        try:
             message = dumps(message).encode(self.__format)
             header_bytes = pack(self.__header_format, len(message))
             self.__send_all(client, header_bytes)
             self.__send_all(client, message)
+        except Exception as e:
+            raise e
+        finally:
+            self.__send_lock.release()
 
     def __send_all(self, client: socket, _bytes: bytes):
         total_send = 0
