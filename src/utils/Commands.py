@@ -1,4 +1,7 @@
 """
+2022/03/12
+FRAME新增KEY CLASS (class name group)
+
 2021/12/12
 更改MOV預設KEY(R、THETA)
 
@@ -190,5 +193,6 @@ SYS_SHUTDOWN = {
 FRAME = {
     'CMD': 'FRAME',
     'IMAGE': '',  # BASE64 String
-    'BBOX': [],  # ARRAY
+    'BBOX': [],  # ARRAY [[X1, Y1, X2, Y2, CLASS_INDEX], [X1, Y1, X2, Y2, CLASS_INDEX]...]
+    'CLASS': []  # CLASS_NAMES
 }
