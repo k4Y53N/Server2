@@ -6,6 +6,11 @@ from json import loads, dumps
 from struct import calcsize, pack, unpack
 from typing import Union, Tuple
 from .RepeatTimer import RepeatTimer
+from .utils.Commands import SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN
+
+_LOGOUT = 'LOGOUT'
+_SYS_CTRL_EXIT = 'EXIT'
+_SYS_CTRL_SHUTDOWN = 'SHUTDOWN'
 
 
 class VerificationError(Exception):
@@ -18,7 +23,7 @@ class Connection(RepeatTimer):
         self.__format = 'utf-8'
         self.__header_format = '>i'
         self.__header_size = calcsize(self.__header_format)
-        self.__connect_keyword = ('LOGOUT', 'EXIT', 'SHUTDOWN')
+        self.__connect_keyword = (_LOGOUT, _SYS_CTRL_EXIT, _SYS_CTRL_SHUTDOWN)
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
         self.__send_lock = Lock()
@@ -28,6 +33,7 @@ class Connection(RepeatTimer):
         self.exc_info = exc_info
         self.__client_address = None
         self.__is_client_connect = True
+        self.__sys_final_ctrl = _SYS_CTRL_EXIT
 
     def __str__(self):
         return 'Server address: %s | Client address: %s' % (self.__server_address, self.__client_address)
@@ -83,7 +89,7 @@ class Connection(RepeatTimer):
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
                 log.error(f'client socket listening fail {E.__class__.__name__}', exc_info=self.exc_info)
-                self.__non_normal_disconnect(client)
+                self.__non_normal_disconnect()
 
     def __recv_message(self, client: socket) -> dict:
         msg_length = self.__recv_all(client, self.__header_size)
@@ -114,7 +120,7 @@ class Connection(RepeatTimer):
                 continue
             except(RuntimeError, OSError, timeout, Exception) as E:
                 log.error(f'client socket sending fail {E.__class__.__name__}', exc_info=self.exc_info)
-                self.__non_normal_disconnect(client)
+                self.__non_normal_disconnect()
 
     def __send_message(self, client: socket, message: dict, block=False):
         """
@@ -146,13 +152,18 @@ class Connection(RepeatTimer):
                 raise RuntimeError('Pipline close')
             total_send += sent
 
-    def __non_normal_disconnect(self, client: socket):
+    def __non_normal_disconnect(self):
         self.__is_client_connect = False
-        client.close()
 
     def __normal_disconnect(self, client: socket, connection_ctrl: dict):
         self.__is_client_connect = False
-        client.close()
+        ctrl = connection_ctrl.get('CMD')
+        if ctrl == _LOGOUT:
+            self.__logout(client)
+        elif ctrl == _SYS_CTRL_EXIT:
+            self.__exit(client)
+        elif ctrl == _SYS_CTRL_SHUTDOWN:
+            self.__shutdown(client)
 
     def __reset(self):
         self.__clear_buffer()
@@ -168,11 +179,29 @@ class Connection(RepeatTimer):
     def __login(self):
         pass
 
-    def __logout(self):
-        pass
+    def __logout(self, client: socket):
+        try:
+            self.__send_message(client, SYS_LOGOUT.copy(), block=True)
+        except Exception as E:
+            log.error(f'client send logout message fail {E.__class__.__name__}', exc_info=self.exc_info)
 
-    def __exit(self):
-        pass
+    def __exit(self, client: socket):
+        try:
+            self.__send_message(client, SYS_EXIT.copy(), block=True)
+        except Exception as E:
+            log.error(f'client send exit message fail {E.__class__.__name__}', exc_info=self.exc_info)
+        finally:
+            self.__sys_final_ctrl = _SYS_CTRL_EXIT
+            self.close()
+
+    def __shutdown(self, client: socket):
+        try:
+            self.__send_message(client, SYS_SHUTDOWN.copy(), block=True)
+        except Exception as E:
+            log.error(f'client send shutdown message fail {E.__class__.__name__}', exc_info=self.exc_info)
+        finally:
+            self.__sys_final_ctrl = _SYS_CTRL_SHUTDOWN
+            self.close()
 
     def get(self, time_limit: float = 0.2) -> Tuple[dict, Tuple[str, int]]:
         try:
