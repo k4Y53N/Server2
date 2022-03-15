@@ -1,10 +1,6 @@
-#! /usr/bin/env python
-# coding=utf-8
-
 import tensorflow as tf
 
 
-# import tensorflow_addons as tfa
 class BatchNormalization(tf.keras.layers.BatchNormalization):
     """
     "Frozen state" and "inference mode" are two separate concepts.
