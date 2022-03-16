@@ -1,4 +1,16 @@
 """
+2022/03/16
+CONFIG 修改成 與 CONFIGS類似格式 如果沒選擇 config_name, model_type皆為null, size為 0, classes為空 list , tiny為False
+&移除FRAME_WORK標籤
+{
+    'CMD' : 'CONFIG',
+    'CONFIG_NAME': str,
+    'SIZE': int,
+    'MODEL_TYPE': str,
+    'TINY': boolean,
+    'CLASSES': [] all class list
+}
+
 2022/03/12
 FRAME新增KEY CLASS (class name group)
 
@@ -154,9 +166,11 @@ LOGIN_INFO = {
 CONFIG = {
     'CMD': 'CONFIG',
     'CONFIG_NAME': None,  # STR
-    'CLASSES': [],  # STR ARRAY
+    'SIZE': 416,
     'MODEL_TYPE': None,  # STR
-    'FRAME_WORK': None,  # STR
+    'TINY': False,
+    'CLASSES': [],  # STR ARRAY
+    # 'FRAME_WORK': None,  # STR
 }
 # 回傳Client可選的config檔
 CONFIGS = {
