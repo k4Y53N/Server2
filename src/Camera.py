@@ -2,6 +2,7 @@ import cv2
 import logging as log
 import numpy as np
 from base64 import b64encode
+from typing import Union
 from .RepeatTimer import RepeatTimer
 
 _width = 1280
@@ -49,7 +50,7 @@ class Camera(RepeatTimer):
         self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.__ret = False
-        self.__image: np.ndarray = None
+        self.__image: Union[np.ndarray, None] = None
         self.lightness_text = " .:-=+*#%@"
         self.light_lv = len(self.lightness_text) - 1
         RepeatTimer.__init__(self, interval=0.)
@@ -101,7 +102,7 @@ class Camera(RepeatTimer):
         self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     @staticmethod
-    def get_b64image(image: np.ndarray):
+    def encode_image_to_b64(image: np.ndarray):
         ret, jpg = cv2.imencode('.jpg', image)
         if not ret:
             return ''
