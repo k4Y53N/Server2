@@ -72,6 +72,7 @@ def build_model(configer: YOLOConfiger):
 class Detector:
     def __init__(self, config_dir: Path) -> None:
         self.configer_group: Dict[str, YOLOConfiger] = load_configer(config_dir)
+        self.configer: Union[None, YOLOConfiger] = None
         self.lock = Lock()
         self.model: Union[tf.keras.Model, None] = None
         self.size = 0
@@ -95,6 +96,7 @@ class Detector:
         try:
             self.__release()
             configer = self.configer_group[config_name]
+            self.configer = configer
             self.model = build_model(configer)
             self.size = configer.size
             self.classes = configer.classes
@@ -187,6 +189,25 @@ class Detector:
             }
             for key, value in self.configer_group.items()
         }
+
+    def get_config(self) -> Dict:
+        config = {
+            'CONFIG_NAME': None,  # STR
+            'SIZE': 0,
+            'MODEL_TYPE': None,  # STR
+            'TINY': False,
+            'CLASSES': [],  # STR ARRAY
+        }
+        configer = self.configer
+        if configer is None:
+            return config
+        config['CONFIG_NAME'] = configer.name
+        config['SIZE'] = configer.size
+        config['MODEL_TYPE'] = configer.model_type
+        config['TINY'] = configer.tiny
+        config['CLASSES'] = configer.classes
+
+        return config
 
     def is_available(self):
         return self.__is_available
