@@ -1,10 +1,12 @@
 import logging as log
 from pathlib import Path
-from .Detector import Detector, DetectResult
-from .Camera import Camera
 from threading import Thread, Lock
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from .Detector import Detector, DetectResult
+from .Camera import Camera
+from .core.configer import YOLOConfiger
+from typing import Dict, Union
 
 
 class Frame:
@@ -34,29 +36,30 @@ class Streamer:
 
     def start(self):
         self.camera.start()
-        self.__is_running = True
+        with self.lock:
+            self.__is_running = True
 
     def join(self):
         self.camera.join()
 
     def reset(self):
-        self.camera.reset()
-        self.detector.reset()
-        self.__is_infer = False
-        self.__is_stream = False
+        with self.lock:
+            self.__is_infer = False
+            self.__is_stream = False
+            self.camera.reset()
+            self.detector.reset()
 
     def close(self):
-        self.__is_running = False
-        self.camera.close()
-        self.detector.close()
+        with self.lock:
+            self.__is_running = False
+            self.__is_infer = False
+            self.__is_stream = False
+            self.camera.close()
+            self.detector.close()
 
     def get(self) -> Frame:
-        """
-        get b64image, boxes, boxes_class
-        :return: Tuple(b64image: str, boxes: list, boxes_class: list)
-        """
         if not self.is_running():
-            raise StopIteration
+            raise RuntimeError('Streamer already closed')
 
         with self.lock:
             is_stream = self.is_stream()
@@ -114,10 +117,10 @@ class Streamer:
     def set_quality(self, width, height):
         self.camera.set_quality(width, height)
 
-    def get_configs(self):
+    def get_configs(self) -> Dict[str, YOLOConfiger]:
         return self.detector.get_configs()
 
-    def get_config(self):
+    def get_config(self) -> Union[None, YOLOConfiger]:
         return self.detector.get_config()
 
     def get_quality(self):

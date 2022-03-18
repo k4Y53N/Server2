@@ -198,35 +198,11 @@ class Detector:
         self.max_total_size = 20
         tf.keras.backend.clear_session()
 
-    def get_configs(self):
-        return {
-            key: {
-                'SIZE': value.size,
-                'MODEL_TYPE': value.model_type,
-                'TINY': value.tiny,
-                'CLASSES': value.classes
-            }
-            for key, value in self.configer_group.items()
-        }
+    def get_configs(self) -> Dict[str, YOLOConfiger]:
+        return self.configer_group
 
-    def get_config(self) -> Dict:
-        config = {
-            'CONFIG_NAME': None,  # STR
-            'SIZE': 0,
-            'MODEL_TYPE': None,  # STR
-            'TINY': False,
-            'CLASSES': [],  # STR ARRAY
-        }
-        configer = self.configer
-        if configer is None:
-            return config
-        config['CONFIG_NAME'] = configer.name
-        config['SIZE'] = configer.size
-        config['MODEL_TYPE'] = configer.model_type
-        config['TINY'] = configer.tiny
-        config['CLASSES'] = configer.classes
-
-        return config
+    def get_config(self) -> YOLOConfiger:
+        return self.configer
 
     def is_available(self):
         return self.__is_available
