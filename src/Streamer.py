@@ -1,11 +1,20 @@
 import logging as log
 from pathlib import Path
-from .Detector import Detector
+from .Detector import Detector, DetectResult
 from .Camera import Camera
 from threading import Thread, Lock
-from typing import Tuple
 from time import sleep
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
+
+
+class Frame:
+    def __init__(self, b64image='', detect_result=None):
+        if detect_result is None:
+            detect_result = DetectResult()
+        self.b64image = b64image
+        self.boxes = detect_result.boxes
+        self.classes = detect_result.classes
+        self.scores = detect_result.scores
 
 
 class Streamer:
@@ -41,7 +50,7 @@ class Streamer:
         self.camera.close()
         self.detector.close()
 
-    def get(self) -> Tuple[str, list, list]:
+    def get(self) -> Frame:
         """
         get b64image, boxes, boxes_class
         :return: Tuple(b64image: str, boxes: list, boxes_class: list)
@@ -56,38 +65,39 @@ class Streamer:
         try:
             if not is_stream:
                 sleep(self.interval)
-                return '', [], []
+                return Frame(b64image='', detect_result=None)
 
             is_image, image = self.camera.get()
 
             if not is_image:
                 sleep(self.interval)
-                return '', [], []
+                return Frame(b64image='', detect_result=None)
 
             if not (is_infer and self.detector.is_available()):
+                b64image = self.camera.encode_image_to_b64(image)
                 sleep(self.interval)
-                return self.camera.encode_image_to_b64(image), [], []
+                return Frame(b64image, detect_result=None)
 
-            b64image, boxes, boxes_class = self.infer_and_encode_image(image)
-            return b64image, boxes, boxes_class
+            frame = self.infer_and_encode_image(image)
+            return frame
 
         except Exception as E:
             log.error(f'Streaming Fail {E.__class__.__name__}', exc_info=True)
 
-        return '', [], []
+        return Frame(b64image='', detect_result=None)
 
-    def infer_and_encode_image(self, image) -> Tuple[str, list, list]:
+    def infer_and_encode_image(self, image) -> Frame:
         with self.thread_pool as pool:
             encoding = pool.submit(self.camera.encode_image_to_b64, image)
             detecting = pool.submit(self.detector.detect, image)
 
         try:
             b64image = encoding.result(timeout=self.timeout)
-            boxes, boxes_class = detecting.result(timeout=self.timeout)
-            return b64image, boxes, boxes_class
+            detect_result = detecting.result(timeout=self.timeout)
+            return Frame(b64image=b64image, detect_result=detect_result)
         except TimeoutError as TOE:
             log.error('Encode and infer image time out', exc_info=TOE)
-            return '', [], []
+            return Frame(b64image='', detect_result=None)
 
     def set_stream(self, is_stream: bool):
         with self.lock:

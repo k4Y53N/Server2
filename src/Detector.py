@@ -2,9 +2,10 @@ import cv2
 import tensorflow as tf
 import numpy as np
 import logging as log
+from copy import deepcopy
 from pathlib import Path
 from threading import Lock
-from typing import Union, Dict, Tuple
+from typing import Union, Dict
 from .core.yolov4 import YOLO, decode, filter_boxes
 from .core.configer import YOLOConfiger
 
@@ -69,6 +70,19 @@ def build_model(configer: YOLOConfiger):
     return model
 
 
+class DetectResult:
+    def __init__(self, boxes=None, scores=None, classes=None):
+        if boxes is None:
+            boxes = []
+        if scores is None:
+            scores = []
+        if classes is None:
+            classes = []
+        self.boxes = boxes
+        self.classes = classes
+        self.scores = scores
+
+
 class Detector:
     def __init__(self, config_dir: Path) -> None:
         self.configer_group: Dict[str, YOLOConfiger] = load_configer(config_dir)
@@ -111,20 +125,23 @@ class Detector:
         finally:
             self.lock.release()
 
-    def detect(self, image: np.ndarray, is_cv2=True) -> Tuple[list, list]:
+    def detect(self, image: np.ndarray, is_cv2=True) -> DetectResult:
         acquired = self.lock.acquire(False)
         if not acquired:
-            return [], []
+            return DetectResult()
         try:
-            return self.infer(image, is_cv2=is_cv2), self.classes
+            detect_result = self.infer(image, is_cv2=is_cv2)
+            detect_result.classes = deepcopy(self.classes)
+            return detect_result
         except Exception as E:
-            return [], []
+            log.error(f'Detect image fail {E.__class__.__name__}', exc_info=True)
+            return DetectResult()
         finally:
             self.lock.release()
 
-    def infer(self, image: np.ndarray, is_cv2=True) -> list:
+    def infer(self, image: np.ndarray, is_cv2=True) -> DetectResult:
         if self.model is None:
-            return []
+            return DetectResult()
         height, width = image.shape[:2]
         data = self.normalization(image, is_cv2=is_cv2)
         pred = self.model(data)
@@ -138,12 +155,15 @@ class Detector:
             iou_threshold=self.iou_threshold,
             score_threshold=self.score_threshold,
         )
+        valid_detections = valid_detections[0]
         nms_boxes = tf.reshape(nms_boxes, (-1, 4))
         nms_classes = tf.reshape(nms_classes, (-1, 1))
+        nms_scores = tf.reshape(nms_scores, (-1))[:valid_detections].numpy().tolist()
+
         valid_data = tf.concat(
             (nms_boxes, nms_classes),
             axis=1
-        )[:valid_detections[0]]
+        )[:valid_detections]
         result = np.empty(valid_data.shape, dtype=np.int)
         for index, valid in enumerate(valid_data):
             # pred boxes = [y1, x1, y2, x2]
@@ -153,8 +173,7 @@ class Detector:
             result[index][2] = valid[3] * width
             result[index][3] = valid[2] * height
             result[index][4] = valid[4]
-
-        return result.tolist()
+        return DetectResult(boxes=result.tolist(), scores=nms_scores, classes=None)
 
     def normalization(self, image: np.ndarray, is_cv2=True) -> np.ndarray:
         if is_cv2:
