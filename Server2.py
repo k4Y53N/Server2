@@ -1,14 +1,14 @@
 import logging as log
 from threading import Thread, Lock
+from pathlib import Path
+from typing import Tuple, Union
+from time import sleep
 from src.Connection import Connection
 from src.Monitor import Monitor
 from src.utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
 from src.utils.util import get_hostname
 from src.RepeatTimer import RepeatTimer
 from src.Streamer import Streamer
-from pathlib import Path
-from typing import Tuple, Union
-from time import sleep
 
 
 class Server(Thread):
@@ -54,6 +54,7 @@ class Server(Thread):
                 if not command:
                     continue
                 self.__event(command, address)
+            log.info('Service finish')
         except Exception as E:
             log.error(f'Event loop was interrupt {E.__class__.__name__}', exc_info=True)
         finally:
@@ -63,12 +64,13 @@ class Server(Thread):
         try:
             command_key = command.get('CMD', None)
             if command_key not in self.__func_map.keys():
+                log.warning(f'Undefined CMD KEY {command_key}')
                 return
             ret = self.__func_map[command_key](command)
             if ret:
                 self.__connection.put(ret, address)
         except Exception as E:
-            log.error(f'illegal command {command} cause {E.__class__.__name__}', exc_info=True)
+            log.error(f'Illegal command {command} cause {E.__class__.__name__}', exc_info=True)
 
     def streaming(self, interval=0.2):
         acquired = self.lock.acquire(False)
@@ -77,14 +79,11 @@ class Server(Thread):
             sleep(interval)
             return
         try:
-            b64image, boxes, boxes_class = self.streamer.get()
-            if not b64image:
-                sleep(interval)
-                return
+            stream_frame = self.streamer.get()
             frame = FRAME.copy()
-            frame['IMAGE'] = b64image
-            frame['BBOX'] = boxes
-            frame['CLASS'] = boxes_class
+            frame['IMAGE'] = stream_frame.b64image
+            frame['BBOX'] = stream_frame.boxes
+            frame['CLASS'] = stream_frame.classes
             self.__connection.put(frame, address)
         finally:
             self.lock.release()
@@ -118,12 +117,33 @@ class Server(Thread):
 
     def __get_configs(self, command: dict, *args, **kwargs) -> dict:
         configs = CONFIGS.copy()
-        configs['CONFIGS'] = self.streamer.get_configs()
+        configs['CONFIGS'] = {
+            key: {
+                'SIZE': val.size,
+                'MODEL_TYPE': val.model_type,
+                'TINY': val.tiny,
+                'CLASSES': val.classes
+            }
+            for key, val in self.streamer.get_configs().items()
+        }
         return configs
 
     def __get_config(self, command: dict, *args, **kwargs) -> dict:
         config = CONFIG.copy()
-        config.update(self.streamer.get_config())
+        yolo_config = self.streamer.get_config()
+        if yolo_config is None:
+            config['CONFIG_NAME'] = None
+            config['SIZE'] = 0
+            config['MODEL_TYPE'] = None
+            config['TINY'] = False
+            CONFIG['CLASSES'] = []
+        else:
+            config['CONFIG_NAME'] = yolo_config.name
+            config['SIZE'] = yolo_config.size
+            config['MODEL_TYPE'] = yolo_config.model_type
+            config['tiny'] = yolo_config.tiny
+            config['CLASSES'] = yolo_config.classes
+
         return config
 
     def __set_stream(self, command: dict, *args, **kwargs) -> None:
