@@ -10,7 +10,7 @@ from typing import Dict, Union
 
 
 class Frame:
-    def __init__(self, b64image='', detect_result=None):
+    def __init__(self, b64image='', detect_result: Union[None, DetectResult] = None):
         if detect_result is None:
             detect_result = DetectResult()
         self.b64image = b64image
