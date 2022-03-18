@@ -81,17 +81,24 @@ class Connection(RepeatTimer):
         while self.__is_client_connect and self.is_running():
             try:
                 message, address = self.__recv_message(client), client.getpeername()
-                if message['CMD'] in self.__connect_keyword:
+                if not isinstance(message, dict):
+                    log.warning(f'Connection receive message is not JSON Dictionary format from {address}')
+                    raise RuntimeError('Wrong message format')
+                cmd = message.get('CMD', None)
+                if cmd is None:
+                    log.warning('Message didnt define CMD')
+                    raise RuntimeError('Cant parse "CMD" key')
+                if cmd in self.__connect_keyword:
                     self.__normal_disconnect(client, message)
                 else:
                     self.__input_buffer.put((message, address), True, 0.2)
             except Full:
                 continue
-            except(RuntimeError, OSError, timeout, Exception) as E:
-                log.error(f'client socket listening fail {E.__class__.__name__}', exc_info=self.exc_info)
+            except Exception as E:
+                log.error(f'Client socket listening fail {E.__class__.__name__}', exc_info=self.exc_info)
                 self.__non_normal_disconnect()
 
-    def __recv_message(self, client: socket) -> dict:
+    def __recv_message(self, client: socket):
         msg_length = self.__recv_all(client, self.__header_size)
         msg_length = unpack(self.__header_format, msg_length)[0]
         msg_bytes = self.__recv_all(client, msg_length)
@@ -118,8 +125,8 @@ class Connection(RepeatTimer):
                 self.__send_message(client, msg_bytes, block=False)
             except Empty:
                 continue
-            except(RuntimeError, OSError, timeout, Exception) as E:
-                log.error(f'client socket sending fail {E.__class__.__name__}', exc_info=self.exc_info)
+            except Exception as E:
+                log.error(f'Client socket sending fail {E.__class__.__name__}', exc_info=self.exc_info)
                 self.__non_normal_disconnect()
 
     def __send_message(self, client: socket, message: dict, block=False):
@@ -138,8 +145,8 @@ class Connection(RepeatTimer):
             header_bytes = pack(self.__header_format, len(message))
             self.__send_all(client, header_bytes)
             self.__send_all(client, message)
-        except Exception as e:
-            raise e
+        except Exception as E:
+            raise E
         finally:
             self.__send_lock.release()
 
@@ -203,7 +210,7 @@ class Connection(RepeatTimer):
             self.__sys_final_ctrl = _SYS_CTRL_SHUTDOWN
             self.close()
 
-    def get(self, time_limit: float = 0.2) -> Tuple[dict, Tuple[str, int]]:
+    def get(self, time_limit: float = 0.2) -> Tuple[dict, Union[Tuple[str, int], None]]:
         try:
             message, address = self.__input_buffer.get(True, time_limit)
             return message, address
