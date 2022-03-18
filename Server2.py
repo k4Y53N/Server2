@@ -41,9 +41,13 @@ class Server(Thread):
         self.__connection.start()
         self.__monitor.start()
         self.__event_thread.start()
+        self.streamer.start()
+        self.stream_repeat_timer.start()
         self.__connection.join()
         self.__monitor.join()
         self.__event_thread.join()
+        self.streamer.join()
+        self.stream_repeat_timer.join()
 
     def __event_loop(self):
         try:
@@ -100,6 +104,7 @@ class Server(Thread):
         self.is_running = False
         self.__connection.close()
         self.__monitor.close()
+        self.streamer.close()
         self.stream_repeat_timer.close()
 
     def __exit(self):
