@@ -77,20 +77,20 @@ class Server(Thread):
             log.error(f'Illegal command {command} cause {E.__class__.__name__}', exc_info=True)
 
     def streaming(self, interval=0.2):
-        acquired = self.lock.acquire(False)
-        address = self.serve_address
-        if not acquired or not address:
+        with self.lock:
+            address = self.serve_address
+
+        if not address:
             sleep(interval)
             return
-        try:
-            stream_frame = self.streamer.get()
-            frame = FRAME.copy()
-            frame['IMAGE'] = stream_frame.b64image
-            frame['BBOX'] = stream_frame.boxes
-            frame['CLASS'] = stream_frame.classes
-            self.__connection.put(frame, address)
-        finally:
-            self.lock.release()
+        stream_frame = self.streamer.get()
+        if not stream_frame.is_available():
+            pass
+        frame = FRAME.copy()
+        frame['IMAGE'] = stream_frame.b64image
+        frame['BBOX'] = stream_frame.boxes
+        frame['CLASS'] = stream_frame.classes
+        self.__connection.put(frame, address)
 
     def __reset(self, client_address):
         with self.lock:

@@ -10,13 +10,16 @@ from typing import Dict, Union
 
 
 class Frame:
-    def __init__(self, b64image='', detect_result: Union[None, DetectResult] = None):
+    def __init__(self, b64image=None, detect_result: Union[None, DetectResult] = None):
         if detect_result is None:
             detect_result = DetectResult()
         self.b64image = b64image
         self.boxes = detect_result.boxes
         self.classes = detect_result.classes
         self.scores = detect_result.scores
+
+    def is_available(self):
+        return self.b64image is not None
 
 
 class Streamer:
@@ -68,13 +71,13 @@ class Streamer:
         try:
             if not is_stream:
                 sleep(self.interval)
-                return Frame(b64image='', detect_result=None)
+                return Frame(b64image=None, detect_result=None)
 
             is_image, image = self.camera.get()
 
             if not is_image:
                 sleep(self.interval)
-                return Frame(b64image='', detect_result=None)
+                return Frame(b64image=None, detect_result=None)
 
             if not (is_infer and self.detector.is_available()):
                 b64image = self.camera.encode_image_to_b64(image)
@@ -87,7 +90,7 @@ class Streamer:
         except Exception as E:
             log.error(f'Streaming Fail {E.__class__.__name__}', exc_info=True)
 
-        return Frame(b64image='', detect_result=None)
+        return Frame(b64image=None, detect_result=None)
 
     def infer_and_encode_image(self, image) -> Frame:
         with self.thread_pool as pool:
