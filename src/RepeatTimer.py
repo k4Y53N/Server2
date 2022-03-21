@@ -6,8 +6,8 @@ init phase -> wait for period -> execute phase -> close -> close phase
 
 
 class RepeatTimer(Thread):
-    def __init__(self, target=None, args=(), kwargs=None, interval=1.):
-        Thread.__init__(self)
+    def __init__(self, target=None, args=(), kwargs=None, interval=1, name=None):
+        Thread.__init__(self, name=name)
         if kwargs is None:
             kwargs = dict()
         self.__target = target
