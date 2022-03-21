@@ -23,10 +23,11 @@ class Frame:
 
 
 class Streamer:
-    def __init__(self, yolo_config_dir: Path, interval: float = 0.05, timeout=10):
+    def __init__(self, yolo_config_dir: Path, interval: float = 0.05, timeout=10, exc_info=False):
         self.camera = Camera()
         self.detector = Detector(yolo_config_dir)
         self.thread_pool = ThreadPoolExecutor(5)
+        self.exc_info = exc_info
         self.__is_infer = False
         self.__is_stream = False
         self.__is_running = False
@@ -88,7 +89,7 @@ class Streamer:
             return frame
 
         except Exception as E:
-            log.error(f'Streaming Fail {E.__class__.__name__}', exc_info=True)
+            log.error(f'Streaming Fail {E.__class__.__name__}', exc_info=self.exc_info)
 
         return Frame(b64image=None, detect_result=None)
 
@@ -102,7 +103,7 @@ class Streamer:
             detect_result = detecting.result(timeout=self.timeout)
             return Frame(b64image=b64image, detect_result=detect_result)
         except TimeoutError as TOE:
-            log.error('Encode and infer image time out', exc_info=TOE)
+            log.error('Encode and infer image time out', exc_info=self.exc_info)
             return Frame(b64image='', detect_result=None)
 
     def set_stream(self, is_stream: bool):
