@@ -98,6 +98,11 @@ class Detector:
         self.timeout = 1
         self.__is_available = False
 
+    def __str__(self):
+        if self.configer is None:
+            return '**No Configer Selected**'
+        return 'Size: %d, Classes: %s, Score Threshold: %f' % (self.size, self.classes, self.score_threshold)
+
     def load_model(self, config_name):
         if config_name not in self.configer_group.keys():
             log.info(f'Config not exist {config_name}')
@@ -120,7 +125,7 @@ class Detector:
             self.max_output_size_per_class = configer.max_output_size_per_class
             self.__is_available = True
         except Exception as E:
-            log.error('Loading model fail', exc_info=E)
+            log.error(f'Loading model fail {E.__class__.__name__}', exc_info=True)
             self.__release()
         finally:
             self.lock.release()
