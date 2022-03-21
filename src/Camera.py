@@ -41,6 +41,7 @@ def gstreamer_pipeline(
 
 class Camera(RepeatTimer):
     def __init__(self):
+        RepeatTimer.__init__(self, interval=0., name='Camera')
         self.__cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
         if not self.__cap.isOpened():
             raise RuntimeError('Camera open fail')
@@ -49,19 +50,18 @@ class Camera(RepeatTimer):
         self.__delay = 1 / self.__FPS
         self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.__ret = False
+        self.__is_image = False
         self.__image: Union[np.ndarray, None] = None
-        self.lightness_text = " .:-=+*#%@"
+        self.lightness_text = ' .:-=+*#%@'
         self.light_lv = len(self.lightness_text) - 1
-        RepeatTimer.__init__(self, interval=0., name='Camera')
 
     def __str__(self):
         s = 'FPS: %d  Delay: %f  Width: %d  Height: %d\n' % (self.__FPS, self.__delay, self.__width, self.__height)
-        ret, image = self.__ret, self.__image
+        ret, image = self.__is_image, self.__image
         if not ret:
             s += '**NO IMAGE**'
             return s
-        s += '-' * (_ascii_w + 2) + '\n'
+        s += '+' + '-' * _ascii_w + '+\n'
         image = cv2.resize(image, (_ascii_w, _ascii_h))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         for row in image:
@@ -69,26 +69,31 @@ class Camera(RepeatTimer):
             for pixel in row:
                 s += self.lightness_text[round(pixel / 255 * self.light_lv)]
             s += '|\n'
-        s += '-' * (_ascii_w + 2)
+        s += '+' + '-' * _ascii_w + '+\n'
         return s
 
     def init_phase(self):
         pass
 
     def execute_phase(self):
-        self.__ret, self.__image = self.__cap.read()
+        is_image, image = self.__cap.read()
+        if not is_image:
+            image = None
+        self.__is_image, self.__image = is_image, image
 
     def close_phase(self):
         self.__cap.release()
-        self.__ret = False
-        self.__image = None
+        self.__is_image, self.__image = False, None
 
     def get(self):
-        if (not self.__ret) or self.__image is None:
+        is_image, image = self.__is_image, self.__image
+        width, height = self.__width, self.__height
+
+        if (not is_image) or (image is None):
             return False, None
-        if self.__image.shape != (self.__height, self.__width, 3):
-            return self.__ret, cv2.resize(self.__image, (self.__width, self.__height))
-        return self.__ret, self.__image
+        if image.shape != (height, width, 3):
+            return is_image, cv2.resize(image, (width, height), interpolation=cv2.INTER_NEAREST)
+        return is_image, image
 
     def get_quality(self):
         return self.__width, self.__height
