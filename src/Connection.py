@@ -50,12 +50,16 @@ class Connection(RepeatTimer):
             self.__handle_client(client, address)
             client.close()
         except VerificationError as VE:
-            log.warning(f'Verification fain {VE.__class__.__name__}', exc_info=self.exc_info)
+            log.warning(f'Verification fail {VE.__class__.__name__}', exc_info=self.exc_info)
         except (OSError, KeyboardInterrupt, timeout, Exception) as E:
             self.close()
             log.error(f'Server socket accept fail {E.__class__.__name__}', exc_info=self.exc_info)
         finally:
             self.__reset()
+
+    def close(self):
+        super().close()
+        self.__server_sock.close()
 
     def close_phase(self):
         self.__reset()
