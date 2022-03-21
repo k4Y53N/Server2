@@ -14,7 +14,7 @@ def bar(bar_width, percent, char='#', blank_char=' ') -> str:
 
 class Printer(RepeatTimer):
     def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
-        RepeatTimer.__init__(self, interval=interval)
+        RepeatTimer.__init__(self, interval=interval, name='ShellPrinter')
         self.show_usage = show_usage
         self.objs = printable_objs
         self.bar_width = 30

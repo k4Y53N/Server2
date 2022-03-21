@@ -19,7 +19,7 @@ class VerificationError(Exception):
 
 class Connection(RepeatTimer):
     def __init__(self, ip, port, exc_info=False):
-        RepeatTimer.__init__(self, interval=0)
+        RepeatTimer.__init__(self, interval=0, name='Connection')
         self.__format = 'utf-8'
         self.__header_format = '>i'
         self.__header_size = calcsize(self.__header_format)
@@ -67,8 +67,8 @@ class Connection(RepeatTimer):
             self.__client_address = client.getpeername()
             log.info('Client Connect Address => %s:%d' % address)
             client.settimeout(30)
-            recv_thread = Thread(target=self.__listening, args=(client,))
-            send_thread = Thread(target=self.__sending, args=(client,))
+            recv_thread = Thread(target=self.__listening, args=(client,), name='ClientRecv')
+            send_thread = Thread(target=self.__sending, args=(client,), name='ClientSend')
             recv_thread.start()
             send_thread.start()
             recv_thread.join()

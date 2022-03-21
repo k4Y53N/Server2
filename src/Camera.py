@@ -53,7 +53,7 @@ class Camera(RepeatTimer):
         self.__image: Union[np.ndarray, None] = None
         self.lightness_text = " .:-=+*#%@"
         self.light_lv = len(self.lightness_text) - 1
-        RepeatTimer.__init__(self, interval=0.)
+        RepeatTimer.__init__(self, interval=0., name='Camera')
 
     def __str__(self):
         s = 'FPS: %d  Delay: %f  Width: %d  Height: %d\n' % (self.__FPS, self.__delay, self.__width, self.__height)

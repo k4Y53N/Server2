@@ -9,7 +9,7 @@ import logging as log
 
 class PWMSimulator(RepeatTimer):
     def __init__(self, channel, frequency, name='PWM'):
-        RepeatTimer.__init__(self, interval=0)
+        RepeatTimer.__init__(self, interval=0, name=name)
         if frequency < 0:
             raise ValueError('Frequency must greater than 0')
         self.__lock = Lock()

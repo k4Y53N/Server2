@@ -7,7 +7,7 @@ from threading import Lock
 
 class Monitor(RepeatTimer):
     def __init__(self):
-        RepeatTimer.__init__(self)
+        RepeatTimer.__init__(self, name='Monitor')
         self.displayer = SSD1306_128_32(rst=None, i2c_bus=1, gpio=1)
         self.width = self.displayer.width
         self.height = self.displayer.height
