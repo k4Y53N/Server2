@@ -1,5 +1,5 @@
 import logging as log
-from socket import socket, AF_INET, SOCK_STREAM, timeout
+from socket import socket, AF_INET, SOCK_STREAM, timeout, SHUT_RDWR
 from queue import Queue, Full, Empty
 from threading import Thread, Lock
 from json import loads, dumps
@@ -59,6 +59,7 @@ class Connection(RepeatTimer):
 
     def close(self):
         super().close()
+        self.__server_sock.shutdown(SHUT_RDWR)
         self.__server_sock.close()
 
     def close_phase(self):
