@@ -89,7 +89,7 @@ class Camera(RepeatTimer):
         is_image, image = self.__is_image, self.__image
         width, height = self.__width, self.__height
 
-        if (not is_image) or (image is None):
+        if not is_image:
             return False, None
         if image.shape != (height, width, 3):
             return is_image, cv2.resize(image, (width, height), interpolation=cv2.INTER_NEAREST)
