@@ -135,7 +135,7 @@ class Connection(RepeatTimer):
 
     def __send_message(self, client: socket, message: dict, block=False):
         """
-        send message to cline socket
+        send message to client socket
         :param client: client socket
         :param message: dictionary can be parsed to json format
         :param block: if block = false will skip when didn't get the lock
