@@ -2,7 +2,7 @@ import logging as log
 from pathlib import Path
 from threading import Thread, Lock
 from time import sleep, perf_counter
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Union
 from .Detector import Detector, DetectResult
 from .Camera import Camera
@@ -10,7 +10,7 @@ from .core.configer import YOLOConfiger
 
 
 class Frame:
-    def __init__(self, b64image=None, detect_result: Union[None, DetectResult] = None):
+    def __init__(self, b64image='', detect_result: Union[None, DetectResult] = None):
         if detect_result is None:
             detect_result = DetectResult()
         self.b64image = b64image
@@ -92,9 +92,9 @@ class Streamer:
             b64image = encoding.result(timeout=self.timeout)
             detect_result = detecting.result(timeout=self.timeout)
             return Frame(b64image=b64image, detect_result=detect_result)
-        except TimeoutError:
-            log.error('Encode and infer image time out', exc_info=self.exc_info)
-            return Frame(b64image=None, detect_result=None)
+        except Exception as E:
+            log.error(f'Encode and infer image error {E.__class__.__name__}', exc_info=self.exc_info)
+            return Frame(b64image='', detect_result=None)
 
     def set_stream(self, is_stream: bool):
         with self.lock:
