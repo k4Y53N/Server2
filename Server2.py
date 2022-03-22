@@ -1,5 +1,5 @@
 import logging as log
-from threading import Lock
+from threading import Lock, enumerate
 from pathlib import Path
 from typing import Tuple, Union
 from time import sleep
@@ -206,3 +206,6 @@ if __name__ == '__main__':
         log.error(e.__class__.__name__, exc_info=True)
     finally:
         server.close()
+        server.close_phase()
+        for thread in enumerate():
+            print(thread.name)
