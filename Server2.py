@@ -1,5 +1,5 @@
 import logging as log
-from threading import Thread, Lock
+from threading import Lock
 from pathlib import Path
 from typing import Tuple, Union
 from time import sleep
@@ -9,17 +9,21 @@ from src.utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
 from src.utils.util import get_hostname
 from src.RepeatTimer import RepeatTimer
 from src.Streamer import Streamer
+from src.PWMController import PWMController
 
 
-class Server(Thread):
-    def __init__(self, configs_path: Path, port=0, exc_info=False) -> None:
-        Thread.__init__(self)
-        self.is_running = True
-        self.__connection = Connection(get_hostname(), port, exc_info=exc_info)
-        self.__monitor = Monitor()
-        self.streamer = Streamer(configs_path)
-        self.serve_address: Union[Tuple[str, int], None] = None
+class Server(RepeatTimer):
+    def __init__(self, config_dir: Path, port=0, exc_info=False, pwm_listen=False) -> None:
+        RepeatTimer.__init__(self, interval=0, name='ServerEvent')
         self.lock = Lock()
+        self.serve_address: Union[Tuple[str, int], None] = None
+        self.exc_info = exc_info
+        self.last_cmd = None
+        self.connection = Connection(get_hostname(), port, exc_info=exc_info)
+        self.monitor = Monitor()
+        self.streamer = Streamer(config_dir, max_fps=30, idle_interval=1, timeout=10, exc_info=exc_info)
+        self.pwm = PWMController((37, 38), frequency=0.25, is_listen=pwm_listen)
+        self.stream_repeat_timer = RepeatTimer(target=self.streaming, interval=0, name='Streaming')
         self.__func_map = {
             'RESET': self.__reset,
             'GET_SYS_INFO': self.__get_sys_info,
@@ -31,38 +35,48 @@ class Server(Thread):
             'SET_QUALITY': self.__set_quality,
             'MOV': self.__move
         }
-        self.exc_info = exc_info
-        self.is_running = True
-        self.__event_thread = Thread(target=self.__event_loop, daemon=True)
-        self.stream_repeat_timer = RepeatTimer(target=self.streaming, interval=0)
 
-    def run(self):
-        self.__monitor.set_row_string(0, '%s:%d' % self.__connection.get_server_address())
-        self.__connection.start()
-        self.__monitor.start()
-        self.__event_thread.start()
+    def __str__(self):
+        return f'Last CMD:{self.last_cmd}, Serve Address: {self.serve_address}' + '\n%s\n%s\n%s' % (
+            self.connection,
+            self.pwm,
+            self.streamer
+        )
+
+    def init_phase(self):
+        self.monitor.set_row_string(0, '%s:%d' % self.connection.get_server_address())
+        self.connection.start()
+        self.monitor.start()
         self.streamer.start()
         self.stream_repeat_timer.start()
-        self.__connection.join()
-        self.__monitor.join()
-        self.__event_thread.join()
-        self.streamer.join()
-        self.stream_repeat_timer.join()
+        self.pwm.start()
 
-    def __event_loop(self):
+    def execute_phase(self):
         try:
-            while self.__connection.is_connect() and self.is_running:
-                command, address = self.__connection.get()
-                if address != self.serve_address:
-                    self.__reset(address)
-                if not command:
-                    continue
-                self.__event(command, address)
-            log.info('Service finish')
+            if not self.connection.is_connect():
+                self.close()
+                return
+            command, address = self.connection.get()
+            if address != self.serve_address:
+                self.__reset(address)
+            if not command:
+                return
+            self.__event(command, address)
         except Exception as E:
             log.error(f'Event loop was interrupt {E.__class__.__name__}', exc_info=True)
-        finally:
-            self.close()
+
+    def close_phase(self):
+        self.connection.close()
+        self.monitor.close()
+        self.streamer.close()
+        self.stream_repeat_timer.close()
+        self.pwm.close()
+        self.connection.join()
+        self.monitor.join()
+        self.streamer.join()
+        self.stream_repeat_timer.join()
+        self.pwm.join()
+        log.info('Server closed')
 
     def __event(self, command: dict, address: tuple):
         try:
@@ -70,42 +84,36 @@ class Server(Thread):
             if command_key not in self.__func_map.keys():
                 log.warning(f'Undefined CMD KEY {command_key}')
                 return
+            self.last_cmd = command
             ret = self.__func_map[command_key](command)
             if ret:
-                self.__connection.put(ret, address)
+                self.connection.put(ret, address)
         except Exception as E:
             log.error(f'Illegal command {command} cause {E.__class__.__name__}', exc_info=True)
 
-    def streaming(self, interval=0.2):
+    def streaming(self, interval=0.5):
         with self.lock:
             address = self.serve_address
-
         if not address:
             sleep(interval)
             return
         stream_frame = self.streamer.get()
         if not stream_frame.is_available():
-            pass
+            return
         frame = FRAME.copy()
-        frame['IMAGE'] = stream_frame.b64image
+        frame['IMAGE'] = stream_frame.b64image if stream_frame.b64image else ''
         frame['BBOX'] = stream_frame.boxes
         frame['CLASS'] = stream_frame.classes
-        self.__connection.put(frame, address)
+        self.connection.put(frame, address)
 
     def __reset(self, client_address):
         with self.lock:
             self.serve_address = client_address
             self.streamer.reset()
-
+        self.serve_address = client_address
+        self.last_cmd = None
         client_address = '%s:%d' % client_address if client_address else None
-        self.__monitor.set_row_string(1, client_address)
-
-    def close(self):
-        self.is_running = False
-        self.__connection.close()
-        self.__monitor.close()
-        self.streamer.close()
-        self.stream_repeat_timer.close()
+        self.monitor.set_row_string(1, client_address)
 
     def __exit(self):
         pass
@@ -114,6 +122,7 @@ class Server(Thread):
         pass
 
     def __get_sys_info(self, command: dict, *args, **kwargs) -> dict:
+        log.info('Get System Information')
         sys_info = SYS_INFO.copy()
         sys_info['IS_INFER'] = self.streamer.is_infer()
         sys_info['IS_STREAM'] = self.streamer.is_stream()
@@ -121,6 +130,7 @@ class Server(Thread):
         return sys_info
 
     def __get_configs(self, command: dict, *args, **kwargs) -> dict:
+        log.info('Get configs')
         configs = CONFIGS.copy()
         configs['CONFIGS'] = {
             key: {
@@ -134,6 +144,7 @@ class Server(Thread):
         return configs
 
     def __get_config(self, command: dict, *args, **kwargs) -> dict:
+        log.info('Get Config')
         config = CONFIG.copy()
         yolo_config = self.streamer.get_config()
         if yolo_config is None:
@@ -153,25 +164,31 @@ class Server(Thread):
 
     def __set_stream(self, command: dict, *args, **kwargs) -> None:
         is_stream = bool(command.get('STREAM'))
+        log.info(f'Set Stream: {is_stream}')
         self.streamer.set_stream(is_stream)
 
     def __set_config(self, command: dict, *args, **kwargs) -> None:
         config_name = command.get('CONFIG')
+        log.info(f'Set Config: {config_name}')
         self.streamer.set_config(config_name)
 
     def __set_infer(self, command: dict, *args, **kwargs) -> None:
         is_infer = bool(command.get('INFER'))
+        log.info(f'Set Infer: {is_infer}')
         self.streamer.set_infer(is_infer)
 
     def __set_quality(self, command: dict, *args, **kwargs) -> None:
         width = int(command.get('WIDTH', 0))
         height = int(command.get('HEIGHT', 0))
+        log.info(f'Set Quality: W = {width}, H = {height}')
         if 100 < width < 4196 or 100 < height < 4196:
             return
         self.streamer.set_quality(width, height)
 
     def __move(self, command: dict, *args, **kwargs) -> None:
-        pass
+        r = command.get('R', 0)
+        theta = command.get('THETA', 90)
+        self.pwm.set(r, theta)
 
 
 if __name__ == '__main__':
