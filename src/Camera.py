@@ -40,7 +40,7 @@ def gstreamer_pipeline(
 
 
 class Camera(RepeatTimer):
-    def __init__(self):
+    def __init__(self, encode_quality=50):
         RepeatTimer.__init__(self, interval=0., name='Camera')
         self.__cap = cv2.VideoCapture(gstreamer_pipeline(flip_method=0), cv2.CAP_GSTREAMER)
         if not self.__cap.isOpened():
@@ -54,6 +54,7 @@ class Camera(RepeatTimer):
         self.__image: Union[np.ndarray, None] = None
         self.lightness_text = ' .:-=+*#%@'
         self.light_lv = len(self.lightness_text) - 1
+        self.encode_quality = [cv2.IMWRITE_JPEG_QUALITY, encode_quality]
 
     def __str__(self):
         s = 'FPS: %d  Delay: %f  Width: %d  Height: %d\n' % (self.__FPS, self.__delay, self.__width, self.__height)
@@ -106,9 +107,8 @@ class Camera(RepeatTimer):
         self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    @staticmethod
-    def encode_image_to_b64(image: np.ndarray):
-        ret, jpg = cv2.imencode('.jpg', image)
+    def encode_image_to_b64(self, image: np.ndarray):
+        ret, jpg = cv2.imencode('.jpg', image, self.encode_quality)
         if not ret:
             return ''
         return b64encode(jpg.tobytes()).decode()

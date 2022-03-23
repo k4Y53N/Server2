@@ -27,8 +27,8 @@ class Connection(RepeatTimer):
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
         self.__server_sock.bind((ip, port))
         self.__send_lock = Lock()
-        self.__input_buffer = Queue()
-        self.__output_buffer = Queue()
+        self.__input_buffer = Queue(50)
+        self.__output_buffer = Queue(50)
         self.__server_address = self.__server_sock.getsockname()
         self.exc_info = exc_info
         self.__client_address = None
@@ -71,7 +71,6 @@ class Connection(RepeatTimer):
         try:
             self.__client_address = client.getpeername()
             log.info('Client Connect Address => %s:%d' % address)
-            client.settimeout(30)
             recv_thread = Thread(target=self.__listening, args=(client,), name='ClientRecv')
             send_thread = Thread(target=self.__sending, args=(client,), name='ClientSend')
             recv_thread.start()
@@ -124,10 +123,10 @@ class Connection(RepeatTimer):
     def __sending(self, client: socket):
         while self.__is_client_connect and self.is_running():
             try:
-                msg_bytes, address = self.__output_buffer.get(True, 0.2)
+                message, address = self.__output_buffer.get(True, 0.2)
                 if address != client.getpeername():
                     continue
-                self.__send_message(client, msg_bytes, block=False)
+                self.__send_message(client, message, block=False)
             except Empty:
                 continue
             except Exception as E:
@@ -146,6 +145,7 @@ class Connection(RepeatTimer):
         if not acquired:
             return
         try:
+            log.info(f'Send Message{message.keys()}')
             message = dumps(message).encode(self.__format)
             header_bytes = pack(self.__header_format, len(message))
             self.__send_all(client, header_bytes)
@@ -226,7 +226,7 @@ class Connection(RepeatTimer):
         try:
             self.__output_buffer.put((message, address), True, time_limit)
         except Full:
-            return
+            return 
 
     def get_server_address(self) -> Tuple[str, int]:
         return self.__server_address
