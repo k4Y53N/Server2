@@ -80,6 +80,7 @@ class Server(RepeatTimer):
 
     def __event(self, command: dict, address: tuple):
         try:
+            log.info(F'RECV CMD: {command}')
             command_key = command.get('CMD', None)
             if command_key not in self.__func_map.keys():
                 log.warning(f'Undefined CMD KEY {command_key}')
