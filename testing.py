@@ -27,6 +27,7 @@ image = cv2.imread('person.jpg')
 d.score_threshold = 0.5
 d.iou_threshold = 0.5
 d.load_model('yolov4-416.json')
+tf.keras.backend.clear_session()
 result = d.detect(image)
 
 print(timeit('d.detect(image)', globals=globals(), number=10))
