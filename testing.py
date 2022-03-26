@@ -1,4 +1,8 @@
 import os
+from pathlib import Path
+from src.Detector import Detector
+import cv2
+from timeit import timeit
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import tensorflow as tf
@@ -15,10 +19,7 @@ if gpus:
         # Virtual devices must be set before GPUs have been initialized
         print(e)
 
-from pathlib import Path
-from src.Detector import Detector
-import cv2
-from timeit import timeit
+
 
 p = Path('configs/')
 d = Detector(p)
