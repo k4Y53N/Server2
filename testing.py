@@ -1,3 +1,4 @@
+import cv2
 import tensorflow as tf
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -14,7 +15,6 @@ if gpus:
 
 from pathlib import Path
 from src.Detector import Detector
-import cv2
 from timeit import timeit
 
 p = Path('configs/')
