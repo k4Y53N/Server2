@@ -1,7 +1,7 @@
 import json
+import os
 import numpy as np
 from pathlib import Path
-from typing import Union
 
 
 def load_json(config_path):
@@ -12,14 +12,12 @@ def load_json(config_path):
 
 
 class YOLOConfiger:
-    def __init__(self, config_path: Union[str, Path]):
-        if type(config_path) == type(Path):
-            config_path = str(Path)
+    def __init__(self, config_path: str):
         self.config_path = config_path
         self.config = load_json(config_path)
         self.name = self.config['name']
-        self.model_path = str(Path(self.config['model_path']))
-        self.weight_path = str(Path(self.config['weight_path']))
+        self.model_path = self.config['model_path']
+        self.weight_path = self.config['weight_path']
         self.frame_work = self.config['frame_work']
         self.model_type = self.config['model_type']
         self.size = self.config['size']
@@ -28,11 +26,11 @@ class YOLOConfiger:
         self.max_total_size = self.config['max_total_size']
         self.iou_threshold = self.config['iou_threshold']
         self.score_threshold = self.config['score_threshold']
-        self.logdir = str(Path(self.config['logdir']))
+        self.logdir = self.config['logdir']
         self.classes = self.config['YOLO']['CLASSES']
         self.anchor_per_scale = self.config['YOLO']['ANCHOR_PER_SCALE']
         self.iou_loss_thresh = self.config['YOLO']['IOU_LOSS_THRESH']
-        self.train_annot_path = str(Path(self.config['TRAIN']['ANNOT_PATH']))
+        self.train_annot_path = self.config['TRAIN']['ANNOT_PATH']
         self.train_batch_size = self.config['TRAIN']['BATCH_SIZE']
         self.lr_init = self.config['TRAIN']['LR_INIT']
         self.lr_end = self.config['TRAIN']['LR_END']
@@ -40,8 +38,8 @@ class YOLOConfiger:
         self.init_epoch = self.config['TRAIN']['INIT_EPOCH']
         self.first_stage_epochs = self.config['TRAIN']['FIRST_STAGE_EPOCHS']
         self.second_stage_epochs = self.config['TRAIN']['SECOND_STAGE_EPOCHS']
-        self.pre_train_file_path = str(Path(self.config['TRAIN']['PRETRAIN'])) if self.config['TRAIN']['PRETRAIN'] else None
-        self.test_annot_path = str(Path(self.config['TEST']['ANNOT_PATH']))
+        self.pre_train_file_path = self.config['TRAIN']['PRETRAIN']
+        self.test_annot_path = self.config['TEST']['ANNOT_PATH']
         self.test_batch_size = self.config['TEST']['BATCH_SIZE']
         self.num_class = len(self.classes)
         self.strides = []
@@ -67,6 +65,23 @@ class YOLOConfiger:
             else:
                 self.xyscale = [1, 1, 1]
                 self.freeze_layers = ['conv2d_58', 'conv2d_66', 'conv2d_74']
+
+        self.fix_path()
+
+    def fix_path(self):
+        self.model_path = os.path.join(*Path(self.model_path).parts)
+        self.weight_path = os.path.join(*Path(self.weight_path).parts)
+        self.train_annot_path = os.path.join(*Path(self.train_annot_path).parts)
+        self.test_annot_path = os.path.join(*Path(self.test_annot_path).parts)
+        if self.pre_train_file_path is not None:
+            self.pre_train_file_path = os.path.join(*Path(self.pre_train_file_path).parts)
+
+        self.config['model_path'] = self.model_path
+        self.config['weight_path'] = self.weight_path
+        self.config['TRAIN']['ANNOT_PATH'] = self.train_annot_path
+        self.config['TEST']['ANNOT_PATH'] = self.test_annot_path
+        self.config['TRAIN']['PRETRAIN'] = self.pre_train_file_path
+        self.save()
 
     def update_init_epoch(self, epoch: int):
         self.init_epoch = epoch
