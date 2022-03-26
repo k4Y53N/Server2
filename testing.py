@@ -1,6 +1,6 @@
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 from pathlib import Path
 from src.Detector import Detector
 import cv2
@@ -27,4 +27,4 @@ d.load_model('yolov4-416.json')
 result = d.detect(image)
 
 print(timeit('d.detect(image)', globals=globals(), number=10))
-print(timeit('d.detect(image)', globals=globals(), number=10))
+# print(timeit('d.detect(image)', globals=globals(), number=10))
