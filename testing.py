@@ -11,4 +11,4 @@ d.iou_threshold = 0.5
 d.load_model('yolov4-tiny-416.json')
 result = d.detect(image)
 
-print(timeit('d.detect(image)', globals=None))
+print(timeit('d.detect(image)', globals=globals(), number=10))
