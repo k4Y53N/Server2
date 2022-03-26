@@ -1,23 +1,25 @@
 import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-from pathlib import Path
-from src.Detector import Detector
-import cv2
-from timeit import timeit
 import tensorflow as tf
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
     try:
-        # Currently, memory growth needs to be the same across GPUs
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
+        tf.config.experimental.set_virtual_device_configuration(
+            gpus[0],
+            [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=4096)])
         logical_gpus = tf.config.experimental.list_logical_devices('GPU')
         print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
     except RuntimeError as e:
-        # Memory growth must be set before GPUs have been initialized
+        # Virtual devices must be set before GPUs have been initialized
         print(e)
+
+from pathlib import Path
+from src.Detector import Detector
+import cv2
+from timeit import timeit
+
 p = Path('configs/')
 d = Detector(p)
 image = cv2.imread('person.jpg')
