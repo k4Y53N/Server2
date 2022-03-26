@@ -22,7 +22,7 @@ d = Detector(p)
 image = cv2.imread('person.jpg')
 d.score_threshold = 0.5
 d.iou_threshold = 0.5
-d.load_model('person-320-noPre.json')
+d.load_model('yolov4-tiny-416.json')
 # d.model.save_weights('person-320-noPre.h5')
 # d.model.save('checkpoints/person-320-noPre')
 result = d.detect(image)
