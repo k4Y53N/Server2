@@ -1,13 +1,13 @@
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 from pathlib import Path
 from src.Detector import Detector
 import cv2
 from timeit import timeit
-import tensorflow as tf
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
-gpus = tf.config.experimental.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
+
+# gpus = tf.config.experimental.list_physical_devices('GPU')
+# for gpu in gpus:
+#     tf.config.experimental.set_memory_growth(gpu, True)
 p = Path('configs/')
 d = Detector(p)
 image = cv2.imread('person.jpg')
