@@ -4,9 +4,8 @@ from threading import Thread, Lock
 from time import sleep, perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Union
-from .Detector import Detector, DetectResult
+from src.Detector import Detector, DetectResult, YOLOConfiger
 from .Camera import Camera
-from .core.configer import YOLOConfiger
 
 
 class Frame:
@@ -25,7 +24,7 @@ class Frame:
 class Streamer:
     def __init__(self, yolo_config_dir: Path, max_fps: int = 30, idle_interval=1, timeout=10, exc_info=False):
         self.camera = Camera()
-        self.detector = Detector(yolo_config_dir)
+        self.detector = Detector(False, yolo_config_dir)
         self.thread_pool = ThreadPoolExecutor(5)
         self.exc_info = exc_info
         self.__is_infer = False

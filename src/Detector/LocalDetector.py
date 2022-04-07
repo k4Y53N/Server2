@@ -8,6 +8,8 @@ from threading import Lock
 from typing import Union, Dict
 from .core.yolov4 import YOLO, decode, filter_boxes
 from .core.configer import YOLOConfiger
+from .DetectResult import DetectResult
+from .DetectorInterface import DetectorInterface
 
 
 def load_configer(configs_dir: Path, config_suffix='*.json') -> Dict[str, YOLOConfiger]:
@@ -70,20 +72,7 @@ def build_model(configer: YOLOConfiger):
     return model
 
 
-class DetectResult:
-    def __init__(self, boxes=None, scores=None, classes=None):
-        if boxes is None:
-            boxes = []
-        if scores is None:
-            scores = []
-        if classes is None:
-            classes = []
-        self.boxes = boxes
-        self.classes = classes
-        self.scores = scores
-
-
-class Detector:
+class LocalDetector(DetectorInterface):
     def __init__(self, config_dir: Path) -> None:
         self.configer_group: Dict[str, YOLOConfiger] = load_configer(config_dir)
         self.configer: Union[None, YOLOConfiger] = None
@@ -208,6 +197,3 @@ class Detector:
 
     def get_config(self) -> YOLOConfiger:
         return self.configer
-
-    def is_available(self):
-        return self.__is_available
