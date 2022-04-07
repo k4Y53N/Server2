@@ -12,9 +12,15 @@ def load_json(config_path):
 
 
 class YOLOConfiger:
-    def __init__(self, config_path: str):
-        self.config_path = config_path
-        self.config = load_json(config_path)
+    def __init__(self, config):
+        self.config = {}
+        if type(config) == type(dict):
+            self.config_path = ''
+            self.config = config
+        else:
+            self.config_path = config
+            self.config = load_json(config)
+
         self.name = self.config['name']
         self.model_path = self.config['model_path']
         self.weight_path = self.config['weight_path']
