@@ -30,7 +30,7 @@ class Connection(RepeatTimer):
         self.__input_buffer = Queue(50)
         self.__output_buffer = Queue(50)
         self.__server_address = self.__server_sock.getsockname()
-        self.exc_info = exc_info
+        self.is_show_exc_info = exc_info
         self.__client_address = None
         self.__is_client_connect = True
         self.__sys_final_ctrl = _SYS_CTRL_EXIT
@@ -50,10 +50,10 @@ class Connection(RepeatTimer):
             self.__handle_client(client, address)
             client.close()
         except VerificationError as VE:
-            log.warning(f'Verification fail {VE.__class__.__name__}', exc_info=self.exc_info)
+            log.warning(f'Verification fail {VE.__class__.__name__}', exc_info=self.is_show_exc_info)
         except (OSError, KeyboardInterrupt, timeout, Exception) as E:
             self.close()
-            log.error(f'Server socket accept fail {E.__class__.__name__}', exc_info=self.exc_info)
+            log.error(f'Server socket accept fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
         finally:
             self.__reset()
 
@@ -85,7 +85,7 @@ class Connection(RepeatTimer):
         while self.__is_client_connect and self.is_running():
             try:
                 message, address = self.__recv_message(client), client.getpeername()
-                if not isinstance(message, dict):
+                if type(message) is not dict:
                     log.warning(f'Connection receive message is not JSON Dictionary format from {address}')
                     raise RuntimeError('Wrong message format')
                 cmd = message.get('CMD', None)
@@ -99,7 +99,7 @@ class Connection(RepeatTimer):
             except Full:
                 continue
             except Exception as E:
-                log.error(f'Client socket listening fail {E.__class__.__name__}', exc_info=self.exc_info)
+                log.error(f'Client socket listening fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
                 self.__non_normal_disconnect()
 
     def __recv_message(self, client: socket):
@@ -130,7 +130,7 @@ class Connection(RepeatTimer):
             except Empty:
                 continue
             except Exception as E:
-                log.error(f'Client socket sending fail {E.__class__.__name__}', exc_info=self.exc_info)
+                log.error(f'Client socket sending fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
                 self.__non_normal_disconnect()
 
     def __send_message(self, client: socket, message: dict, block=False):
@@ -195,13 +195,13 @@ class Connection(RepeatTimer):
         try:
             self.__send_message(client, SYS_LOGOUT.copy(), block=True)
         except Exception as E:
-            log.error(f'client send logout message fail {E.__class__.__name__}', exc_info=self.exc_info)
+            log.error(f'client send logout message fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
 
     def __exit(self, client: socket):
         try:
             self.__send_message(client, SYS_EXIT.copy(), block=True)
         except Exception as E:
-            log.error(f'client send exit message fail {E.__class__.__name__}', exc_info=self.exc_info)
+            log.error(f'client send exit message fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
         finally:
             self.__sys_final_ctrl = _SYS_CTRL_EXIT
             self.close()
@@ -210,7 +210,7 @@ class Connection(RepeatTimer):
         try:
             self.__send_message(client, SYS_SHUTDOWN.copy(), block=True)
         except Exception as E:
-            log.error(f'client send shutdown message fail {E.__class__.__name__}', exc_info=self.exc_info)
+            log.error(f'client send shutdown message fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
         finally:
             self.__sys_final_ctrl = _SYS_CTRL_SHUTDOWN
             self.close()
@@ -226,7 +226,7 @@ class Connection(RepeatTimer):
         try:
             self.__output_buffer.put((message, address), True, time_limit)
         except Full:
-            return 
+            return
 
     def get_server_address(self) -> Tuple[str, int]:
         return self.__server_address
