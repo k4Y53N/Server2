@@ -1,28 +1,67 @@
 import logging as log
-from threading import Lock, enumerate
-from pathlib import Path
-from typing import Tuple, Union
+from threading import Lock
+from typing import Tuple, Optional
 from time import sleep
-from src.Connection import Connection
-from src.Monitor import Monitor
-from src.utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
-from src.utils.util import get_hostname
-from src.RepeatTimer import RepeatTimer
-from src.Streamer import Streamer
-from src.PWMController import PWMController
+from configparser import ConfigParser
+from .Connection import Connection
+from .Monitor import Monitor
+from .utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
+from .utils.util import get_hostname
+from .RepeatTimer import RepeatTimer
+from .Streamer import Streamer, StreamerBuilder
+from .PWMController import PWMController
+
+
+class ServerBuilder:
+    def __init__(self, build_config_file_path):
+        config = ConfigParser()
+        config.read(build_config_file_path)
+        is_ip = config.getboolean('Server', 'ip')
+        self.ip = config['Server']['ip'] if is_ip else get_hostname()
+        self.port = int(config['Server']['port'])
+        self.is_show_exc_info = config.getboolean('Server', 'is_show_exc_info')
+        self.pwm_speed_port = int(config['PWM']['pwm_speed_port'])
+        self.pwm_angle_port = int(config['PWM']['pwm_angle_port'])
+        self.pwm_frequency = float(config['PWM']['frequency'])
+        self.is_pwm_listen = config.getboolean('PWM', 'is_pwm_listen')
+        self.max_fps = int(config['Streamer']['max_fps'])
+        self.idle_interval = float(config['Streamer']['idle_interval'])
+        self.timeout = float(config['Streamer']['timeout'])
+        self.jpg_encode_rate = int(config['Streamer']['jpg_encode_rate'])
+        self.yolo_configs_dir = config['Detector']['configs']
+        self.is_local_detector = config.getboolean('Detector', 'is_local_detector')
+        self.remote_detector_ip = config['Detector']['detect_server_ip']
+        self.remote_detector_port = config['Detector']['detect_server_port']
+
+    def get_streamer_builder(self) -> StreamerBuilder:
+        streamer_builder = StreamerBuilder()
+        streamer_builder.yolo_config_dir = self.yolo_configs_dir
+        streamer_builder.max_fps = self.max_fps
+        streamer_builder.idle_interval = self.idle_interval
+        streamer_builder.timeout = self.timeout
+        streamer_builder.jpg_encode_rate = self.jpg_encode_rate
+        streamer_builder.is_show_exc_info = self.is_show_exc_info
+        streamer_builder.is_local_detector = self.is_local_detector
+        streamer_builder.remote_detector_ip = self.remote_detector_ip
+        streamer_builder.remote_detector_port = self.remote_detector_port
+        return streamer_builder
 
 
 class Server(RepeatTimer):
-    def __init__(self, config_dir: Path, port=0, exc_info=False, pwm_listen=False) -> None:
+    def __init__(self, builder: ServerBuilder) -> None:
         RepeatTimer.__init__(self, interval=0, name='ServerEvent')
         self.lock = Lock()
-        self.serve_address: Union[Tuple[str, int], None] = None
-        self.exc_info = exc_info
+        self.serve_address: Optional[Tuple[str, int]] = None
+        self.exc_info = builder.is_show_exc_info
         self.last_cmd = None
-        self.connection = Connection(get_hostname(), port, exc_info=exc_info)
+        self.connection = Connection(builder.ip, builder.port, exc_info=self.exc_info)
         self.monitor = Monitor()
-        self.streamer = Streamer(config_dir, max_fps=30, idle_interval=1, timeout=10, exc_info=exc_info)
-        self.pwm = PWMController((37, 38), frequency=0.25, is_listen=pwm_listen)
+        self.streamer = Streamer(builder.get_streamer_builder())
+        self.pwm = PWMController(
+            (builder.pwm_speed_port, builder.pwm_angle_port),
+            frequency=builder.pwm_frequency,
+            is_listen=builder.is_pwm_listen
+        )
         self.stream_repeat_timer = RepeatTimer(target=self.streaming, interval=0, name='Streaming')
         self.__func_map = {
             'RESET': self.__reset,
@@ -63,7 +102,7 @@ class Server(RepeatTimer):
                 return
             self.__event(command, address)
         except Exception as E:
-            log.error(f'Event loop was interrupt {E.__class__.__name__}', exc_info=True)
+            log.error(f'Event loop was interrupt {E.__class__.__name__}', exc_info=self.exc_info)
 
     def close_phase(self):
         self.connection.close()
@@ -90,7 +129,7 @@ class Server(RepeatTimer):
             if ret:
                 self.connection.put(ret, address)
         except Exception as E:
-            log.error(f'Illegal command {command} cause {E.__class__.__name__}', exc_info=True)
+            log.error(f'Illegal command {command} cause {E.__class__.__name__}', exc_info=self.exc_info)
 
     def streaming(self, interval=0.5):
         with self.lock:
@@ -191,22 +230,22 @@ class Server(RepeatTimer):
         theta = command.get('THETA', 90)
         self.pwm.set(r, theta)
 
-
-if __name__ == '__main__':
-    log.basicConfig(
-        format='%(asctime)s %(levelname)s:%(message)s',
-        datefmt='%Y/%m/%d %H:%M:%S',
-        level=log.INFO
-    )
-    configs_path = Path('configs')
-    server = Server(configs_path, exc_info=True)
-
-    try:
-        server.run()
-    except (KeyboardInterrupt, Exception) as e:
-        log.error(e.__class__.__name__, exc_info=True)
-    finally:
-        server.close()
-        server.close_phase()
-        for thread in enumerate():
-            print(thread.name)
+#
+# if __name__ == '__main__':
+#     log.basicConfig(
+#         format='%(asctime)s %(levelname)s:%(message)s',
+#         datefmt='%Y/%m/%d %H:%M:%S',
+#         level=log.INFO
+#     )
+#     configs_path = Path('../configs')
+#     server = Server(configs_path, exc_info=True)
+#
+#     try:
+#         server.run()
+#     except (KeyboardInterrupt, Exception) as e:
+#         log.error(e.__class__.__name__, exc_info=True)
+#     finally:
+#         server.close()
+#         server.close_phase()
+#         for thread in enumerate():
+#             print(thread.name)
