@@ -13,8 +13,7 @@ def load_json(config_path):
 
 class YOLOConfiger:
     def __init__(self, config):
-        self.config = {}
-        if type(config) == type(dict):
+        if type(config) is dict:
             self.config_path = ''
             self.config = config
         else:
@@ -87,7 +86,6 @@ class YOLOConfiger:
         self.config['TRAIN']['ANNOT_PATH'] = self.train_annot_path
         self.config['TEST']['ANNOT_PATH'] = self.test_annot_path
         self.config['TRAIN']['PRETRAIN'] = self.pre_train_file_path
-        self.save()
 
     def update_init_epoch(self, epoch: int):
         self.init_epoch = epoch

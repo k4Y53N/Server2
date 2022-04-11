@@ -1,4 +1,3 @@
-
 class DetectResult:
     def __init__(self, boxes=None, scores=None, classes=None):
         if boxes is None:

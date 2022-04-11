@@ -5,7 +5,7 @@ import logging as log
 from copy import deepcopy
 from pathlib import Path
 from threading import Lock
-from typing import Union, Dict
+from typing import Union, Dict, Optional
 from .core.yolov4 import YOLO, decode, filter_boxes
 from .core.configer import YOLOConfiger
 from .DetectResult import DetectResult
@@ -17,7 +17,7 @@ def load_configer(configs_dir: Path, config_suffix='*.json') -> Dict[str, YOLOCo
     for config_file_path in configs_dir.glob(config_suffix):
         try:
             configer = YOLOConfiger(str(config_file_path))
-            config_group[config_file_path.name] = configer
+            config_group[configer.name] = configer
         except KeyError:
             log.warning(f'Parse json file {config_file_path} to YOLO-Configer fail')
 
@@ -75,9 +75,9 @@ def build_model(configer: YOLOConfiger):
 class LocalDetector(DetectorInterface):
     def __init__(self, config_dir: Path) -> None:
         self.configer_group: Dict[str, YOLOConfiger] = load_configer(config_dir)
-        self.configer: Union[None, YOLOConfiger] = None
+        self.configer: Optional[YOLOConfiger] = None
         self.lock = Lock()
-        self.model: Union[tf.keras.Model, None] = None
+        self.model: Optional[tf.keras.Model] = None
         self.size = 0
         self.classes = []
         self.iou_threshold = 0.5
@@ -186,6 +186,7 @@ class LocalDetector(DetectorInterface):
     def __release(self):
         self.__is_available = False
         self.model = None
+        self.configer = None
         self.size = 0
         self.classes = []
         self.score_threshold = 0
@@ -195,5 +196,5 @@ class LocalDetector(DetectorInterface):
     def get_configs(self) -> Dict[str, YOLOConfiger]:
         return self.configer_group
 
-    def get_config(self) -> YOLOConfiger:
+    def get_config(self) -> Optional[YOLOConfiger]:
         return self.configer
