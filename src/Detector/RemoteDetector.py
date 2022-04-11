@@ -9,8 +9,8 @@ from .Commands import LOAD_MODEL, DETECT, RESET, CLOSE, GET_CONFIG, GET_CONFIGS
 from typing import Dict, Optional
 from base64 import b64encode
 
-image_w = 416
-image_h = 416
+image_resize_w = 416
+image_resize_h = 416
 
 
 def encode_b64image(image: np.ndarray, width, height) -> str:
@@ -20,13 +20,14 @@ def encode_b64image(image: np.ndarray, width, height) -> str:
 
 
 class RemoteDetector(DetectorInterface):
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, is_show_exc_info):
         self.conn = ClientConnection(ip, port)
+        self.is_show_exc_info = is_show_exc_info
 
     def __str__(self):
         return '**Remote Detector**'
 
-    def load_model(self, config_name):
+    def load_model(self, config_name: str):
         cmd = LOAD_MODEL.copy()
         cmd['CONFIG_NAME'] = config_name
         self.conn.send_message(cmd)
@@ -34,14 +35,13 @@ class RemoteDetector(DetectorInterface):
     def detect(self, image: np.ndarray) -> DetectResult:
         original_h, original_w = image.shape[:2]
         cmd = DETECT.copy()
-        cmd['IMAGE'] = encode_b64image(image, image_w, image_h)
-        self.conn.send_message(cmd)
-        result = self.conn.receive_message()
+        cmd['IMAGE'] = encode_b64image(image, image_resize_w, image_resize_h)
+        result = self.conn.send_and_recv(cmd)
         bbox = result.get('BBOX', [])
         scores = result.get('SCORE', [])
         classes = result.get('CLASS', [])
-        x_scale = original_w / image_w
-        y_scale = original_h / image_h
+        x_scale = original_w / image_resize_w
+        y_scale = original_h / image_resize_h
         real_boxes = [
             [
                 round(box[0] * x_scale),
@@ -66,8 +66,7 @@ class RemoteDetector(DetectorInterface):
 
     def get_configs(self) -> Dict[str, YOLOConfiger]:
         cmd = GET_CONFIGS.copy()
-        self.conn.send_message(cmd)
-        configs = self.conn.receive_message()
+        configs = self.conn.send_and_recv(cmd)
         configs = configs.get('CONFIGS', {})
         configer_group = {}
         for config in configs.values():
@@ -75,7 +74,7 @@ class RemoteDetector(DetectorInterface):
                 yolo_configer = YOLOConfiger(config)
                 configer_group[yolo_configer.name] = yolo_configer
             except Exception as E:
-                log.error('Parse config to YOLOConfiger fail', exc_info=True)
+                log.error('Parse config to YOLOConfiger fail', exc_info=self.is_show_exc_info)
                 continue
         return configer_group
 
@@ -89,5 +88,5 @@ class RemoteDetector(DetectorInterface):
             yolo_configer = YOLOConfiger(config)
             return yolo_configer
         except Exception as E:
-            log.error('Get YOLOConfig fail', exc_info=True)
+            log.error('Get YOLOConfig fail', exc_info=self.is_show_exc_info)
             return None
