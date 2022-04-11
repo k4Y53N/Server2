@@ -19,7 +19,7 @@ class Disconnect(Exception):
     pass
 
 
-class DetectorServer(ServerConnection):
+class DetectServer(ServerConnection):
     def __init__(self, ip, port, config_path: Path):
         ServerConnection.__init__(self, ip, port)
         self.detector = LocalDetector(config_path)
