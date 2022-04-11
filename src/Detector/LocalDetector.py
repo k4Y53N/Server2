@@ -12,7 +12,10 @@ from .DetectResult import DetectResult
 from .DetectorInterface import DetectorInterface
 
 
-def load_configer(configs_dir: Path, config_suffix='*.json') -> Dict[str, YOLOConfiger]:
+def load_configer(configs_dir: Union[Path, str], config_suffix='*.json') -> Dict[str, YOLOConfiger]:
+    if type(configs_dir) is str:
+        configs_dir = Path(configs_dir)
+
     config_group = {}
     for config_file_path in configs_dir.glob(config_suffix):
         try:
@@ -73,7 +76,7 @@ def build_model(configer: YOLOConfiger):
 
 
 class LocalDetector(DetectorInterface):
-    def __init__(self, config_dir: Path) -> None:
+    def __init__(self, config_dir: Union[Path, str], is_show_exc_info=True) -> None:
         self.configer_group: Dict[str, YOLOConfiger] = load_configer(config_dir)
         self.configer: Optional[YOLOConfiger] = None
         self.lock = Lock()
@@ -86,6 +89,7 @@ class LocalDetector(DetectorInterface):
         self.max_output_size_per_class = 20
         self.timeout = 1
         self.__is_available = False
+        self.is_show_exc_info = is_show_exc_info
 
     def __str__(self):
         if self.configer is None:
@@ -113,8 +117,9 @@ class LocalDetector(DetectorInterface):
             self.max_total_size = configer.max_total_size
             self.max_output_size_per_class = configer.max_output_size_per_class
             self.__is_available = True
+            log.info(f'Loading model {config_name} finish')
         except Exception as E:
-            log.error(f'Loading model fail {E.__class__.__name__}', exc_info=True)
+            log.error(f'Loading model fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
             self.__release()
         finally:
             self.lock.release()
@@ -128,7 +133,7 @@ class LocalDetector(DetectorInterface):
             detect_result.classes = deepcopy(self.classes)
             return detect_result
         except Exception as E:
-            log.error(f'Detect image fail {E.__class__.__name__}', exc_info=True)
+            log.error(f'Detect image fail {E.__class__.__name__}', exc_info=self.is_show_exc_info)
             return DetectResult()
         finally:
             self.lock.release()
