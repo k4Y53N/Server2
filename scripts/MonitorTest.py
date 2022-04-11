@@ -1,13 +1,3 @@
-import sys
-from pathlib import Path
-
-__CURRENT_DIR = Path.cwd()
-if (__CURRENT_DIR / 'src').is_dir():
-    sys.path.append(str(__CURRENT_DIR))
-    print(sys.path)
-else:
-    sys.path.append(str(__CURRENT_DIR.parent))
-    print(sys.path)
 from time import sleep
 from src.Monitor import Monitor
 
