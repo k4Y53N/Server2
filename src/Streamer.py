@@ -1,15 +1,14 @@
 import logging as log
-from pathlib import Path
 from threading import Thread, Lock
 from time import sleep, perf_counter
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, Union
-from src.Detector import Detector, DetectResult, YOLOConfiger
+from typing import Dict, Optional
+from .Detector import Detector, DetectResult, YOLOConfiger, DetectorBuilder
 from .Camera import Camera
 
 
 class Frame:
-    def __init__(self, b64image='', detect_result: Union[None, DetectResult] = None):
+    def __init__(self, b64image='', detect_result: Optional[DetectResult] = None):
         if detect_result is None:
             detect_result = DetectResult()
         self.b64image = b64image
@@ -21,17 +20,40 @@ class Frame:
         return bool(self.b64image)
 
 
+class StreamerBuilder:
+    def __init__(self):
+        self.max_fps = 30
+        self.idle_interval = 1
+        self.timeout = None
+        self.jpg_encode_rate = 50
+        self.is_show_exc_info = False
+        self.yolo_config_dir = ''
+        self.is_local_detector = True
+        self.remote_detector_ip = 'localhost'
+        self.remote_detector_port = 0
+
+    def get_detector_builder(self) -> DetectorBuilder:
+        detector_builder = DetectorBuilder()
+        detector_builder.yolo_configs_dir = self.yolo_config_dir
+        detector_builder.is_local_detector = self.is_local_detector
+        detector_builder.is_show_exc_info = self.is_show_exc_info
+        detector_builder.remote_detector_ip = self.remote_detector_ip
+        detector_builder.remote_detector_port = self.remote_detector_port
+
+        return detector_builder
+
+
 class Streamer:
-    def __init__(self, yolo_config_dir: Path, max_fps: int = 30, idle_interval=1, timeout=10, exc_info=False):
-        self.camera = Camera()
-        self.detector = Detector(False, yolo_config_dir)
+    def __init__(self, builder: StreamerBuilder):
+        self.camera = Camera(encode_quality=builder.jpg_encode_rate)
+        self.detector = Detector(builder.get_detector_builder())
         self.thread_pool = ThreadPoolExecutor(5)
-        self.exc_info = exc_info
+        self.exc_info = builder.is_show_exc_info
         self.__is_infer = False
         self.__is_stream = False
-        self.interval = 1 / max_fps if max_fps != 0 else 1
-        self.idle_interval = idle_interval
-        self.timeout = timeout
+        self.interval = 1 / builder.max_fps if builder.max_fps > 0 else 1
+        self.idle_interval = builder.idle_interval
+        self.timeout = builder.timeout
         self.lock = Lock()
 
     def __str__(self):
@@ -56,6 +78,7 @@ class Streamer:
             self.__is_stream = False
             self.camera.close()
             self.detector.close()
+        self.thread_pool.shutdown(True)
 
     def get(self) -> Frame:
         init_time = perf_counter()
@@ -83,10 +106,8 @@ class Streamer:
         return frame
 
     def infer_and_encode_image(self, image) -> Frame:
-        with self.thread_pool as pool:
-            encoding = pool.submit(self.camera.encode_image_to_b64, image)
-            detecting = pool.submit(self.detector.detect, image)
-
+        detecting = self.thread_pool.submit(self.detector.detect, image)
+        encoding = self.thread_pool.submit(self.camera.encode_image_to_b64, image)
         try:
             b64image = encoding.result(timeout=self.timeout)
             detect_result = detecting.result(timeout=self.timeout)
@@ -113,7 +134,7 @@ class Streamer:
     def get_configs(self) -> Dict[str, YOLOConfiger]:
         return self.detector.get_configs()
 
-    def get_config(self) -> Union[None, YOLOConfiger]:
+    def get_config(self) -> Optional[YOLOConfiger]:
         return self.detector.get_config()
 
     def get_quality(self):
