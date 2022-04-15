@@ -3,7 +3,7 @@ from .RepeatTimer import RepeatTimer
 from threading import Lock
 from collections import deque
 from typing import Iterable, Tuple
-from time import time, sleep
+from time import sleep, perf_counter
 import logging as log
 
 
@@ -160,7 +160,7 @@ class PWMController(RepeatTimer):
         GPIO.setmode(GPIO.BOARD)
         self.speed = PWMSimulator(channels[0], frequency, name='PWM_SP')
         self.angle = PWMSimulator(channels[1], frequency, name='PWM_AG')
-        self.init_time = 0.
+        self.init_time = perf_counter()
         self.reset_interval = 1.
         self.is_listen = is_listen
         self.listener = PWMListener(
@@ -180,7 +180,7 @@ class PWMController(RepeatTimer):
             self.listener.start()
 
     def execute_phase(self):
-        if time() - self.init_time > self.reset_interval:
+        if perf_counter() - self.init_time > self.reset_interval:
             self.reset()
 
     def close_phase(self):
@@ -218,4 +218,4 @@ class PWMController(RepeatTimer):
         self.set(0, 90)
 
     def reset_time(self):
-        self.init_time = time()
+        self.init_time = perf_counter()
