@@ -9,6 +9,6 @@
 ### Layer
 ![](docs/Layers.png)
 ### Remote detect
-![](docs/Remote detect.png)
+![](docs/Remote%20detect.png)
 ### Thread diagram
 ![](docs/MultiThreadDiagram.png)
