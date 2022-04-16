@@ -26,15 +26,18 @@ class Printer(RepeatTimer):
     def execute_phase(self):
         self.clean_screen()
         if self.show_usage:
-            print(self.get_cpu_usage().ljust(self.padding_width))
-            print(self.get_memory_usage().ljust(self.padding_width))
+            self.print(self.get_cpu_usage())
+            self.print(self.get_memory_usage())
         for obj in self.objs:
             for s in str(obj).split('\n'):
                 if s:
-                    print(s.ljust(self.padding_width))
+                    self.print(s)
 
     def close_phase(self):
         del self.objs
+
+    def print(self, s: str):
+        print(s.ljust(self.padding_width))
 
     @staticmethod
     def clean_screen():
@@ -108,7 +111,7 @@ class LinuxShellPrinter(Printer):
         return s.rstrip()
 
 
-class ShellPrinter(RepeatTimer):
+class ShellPrinter:
     def __new__(cls, *args, **kwargs):
         if sys.platform.startswith('linux'):
             return LinuxShellPrinter(printable_objs=args, interval=0.2, show_usage=True)
