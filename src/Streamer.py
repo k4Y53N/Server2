@@ -24,7 +24,7 @@ class StreamerBuilder:
     def __init__(self):
         self.max_fps = 30
         self.idle_interval = 1
-        self.timeout = None
+        self.stream_timeout = None
         self.jpg_encode_rate = 50
         self.is_show_exc_info = False
         self.yolo_config_dir = ''
@@ -53,7 +53,7 @@ class Streamer:
         self.__is_stream = False
         self.interval = 1 / builder.max_fps if builder.max_fps > 0 else 1
         self.idle_interval = builder.idle_interval
-        self.timeout = builder.timeout
+        self.timeout = builder.stream_timeout
         self.lock = Lock()
 
     def __str__(self):

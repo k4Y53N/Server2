@@ -6,6 +6,8 @@ if __name__ == '__main__':
     config['Server'] = {
         'ip': 0,
         'port': 0,
+        'server_timeout': 300,
+        'client_timeout': 60,
         'is_show_exc_info': True,
         'log_level': log.INFO
     }

@@ -3,7 +3,7 @@ from threading import Lock
 from typing import Tuple, Optional
 from time import sleep
 from configparser import ConfigParser
-from .Connection import Connection
+from .Connection import Connection, ConnectionBuilder
 from .Monitor import Monitor
 from .utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
 from .utils.util import get_hostname
@@ -19,6 +19,8 @@ class ServerBuilder:
         is_ip = config.getboolean('Server', 'ip')
         self.ip = config['Server']['ip'] if is_ip else get_hostname()
         self.port = int(config['Server']['port'])
+        self.server_timeout = float(config['Server']['server_timeout'])
+        self.client_timeout = float(config['Server']['client_timeout'])
         self.is_show_exc_info = config.getboolean('Server', 'is_show_exc_info')
         self.pwm_speed_port = int(config['PWM']['pwm_speed_port'])
         self.pwm_angle_port = int(config['PWM']['pwm_angle_port'])
@@ -26,7 +28,7 @@ class ServerBuilder:
         self.is_pwm_listen = config.getboolean('PWM', 'is_pwm_listen')
         self.max_fps = int(config['Streamer']['max_fps'])
         self.idle_interval = float(config['Streamer']['idle_interval'])
-        self.timeout = float(config['Streamer']['timeout'])
+        self.stream_timeout = float(config['Streamer']['timeout'])
         self.jpg_encode_rate = int(config['Streamer']['jpg_encode_rate'])
         self.yolo_configs_dir = config['Detector']['configs']
         self.is_local_detector = config.getboolean('Detector', 'is_local_detector')
@@ -38,13 +40,22 @@ class ServerBuilder:
         streamer_builder.yolo_config_dir = self.yolo_configs_dir
         streamer_builder.max_fps = self.max_fps
         streamer_builder.idle_interval = self.idle_interval
-        streamer_builder.timeout = self.timeout
+        streamer_builder.stream_timeout = self.stream_timeout
         streamer_builder.jpg_encode_rate = self.jpg_encode_rate
         streamer_builder.is_show_exc_info = self.is_show_exc_info
         streamer_builder.is_local_detector = self.is_local_detector
         streamer_builder.remote_detector_ip = self.remote_detector_ip
         streamer_builder.remote_detector_port = self.remote_detector_port
         return streamer_builder
+
+    def get_connection_builder(self) -> ConnectionBuilder:
+        connection_builder = ConnectionBuilder()
+        connection_builder.ip = self.ip
+        connection_builder.port = self.port
+        connection_builder.server_timeout = self.server_timeout
+        connection_builder.client_timeout = self.client_timeout
+        connection_builder.is_show_exc_info = self.is_show_exc_info
+        return connection_builder
 
 
 class Server(RepeatTimer):
@@ -54,7 +65,7 @@ class Server(RepeatTimer):
         self.serve_address: Optional[Tuple[str, int]] = None
         self.exc_info = builder.is_show_exc_info
         self.last_cmd = None
-        self.connection = Connection(builder.ip, builder.port, exc_info=self.exc_info)
+        self.connection = Connection(builder.get_connection_builder())
         self.monitor = Monitor()
         self.streamer = Streamer(builder.get_streamer_builder())
         self.pwm = PWMController(
@@ -229,23 +240,3 @@ class Server(RepeatTimer):
         r = command.get('R', 0)
         theta = command.get('THETA', 90)
         self.pwm.set(r, theta)
-
-#
-# if __name__ == '__main__':
-#     log.basicConfig(
-#         format='%(asctime)s %(levelname)s:%(message)s',
-#         datefmt='%Y/%m/%d %H:%M:%S',
-#         level=log.INFO
-#     )
-#     configs_path = Path('../configs')
-#     server = Server(configs_path, exc_info=True)
-#
-#     try:
-#         server.run()
-#     except (KeyboardInterrupt, Exception) as e:
-#         log.error(e.__class__.__name__, exc_info=True)
-#     finally:
-#         server.close()
-#         server.close_phase()
-#         for thread in enumerate():
-#             print(thread.name)

@@ -13,24 +13,35 @@ _SYS_CTRL_EXIT = 'EXIT'
 _SYS_CTRL_SHUTDOWN = 'SHUTDOWN'
 
 
+class ConnectionBuilder:
+    def __init__(self):
+        self.ip = 'localhost'
+        self.port = 0
+        self.server_timeout = 300
+        self.client_timeout = 30
+        self.is_show_exc_info = False
+
+
 class VerificationError(Exception):
     pass
 
 
 class Connection(RepeatTimer):
-    def __init__(self, ip, port, exc_info=False):
+    def __init__(self, builder: ConnectionBuilder):
         RepeatTimer.__init__(self, interval=0, name='Connection')
         self.__format = 'utf-8'
         self.__header_format = '>i'
         self.__header_size = calcsize(self.__header_format)
         self.__connect_keyword = (_LOGOUT, _SYS_CTRL_EXIT, _SYS_CTRL_SHUTDOWN)
         self.__server_sock = socket(AF_INET, SOCK_STREAM)
-        self.__server_sock.bind((ip, port))
+        self.__server_sock.bind((builder.ip, builder.port))
         self.__send_lock = Lock()
         self.__input_buffer = Queue(50)
         self.__output_buffer = Queue(50)
         self.__server_address = self.__server_sock.getsockname()
-        self.is_show_exc_info = exc_info
+        self.is_show_exc_info = builder.is_show_exc_info
+        self.server_timeout = builder.server_timeout
+        self.client_timeout = builder.client_timeout
         self.__client_address = None
         self.__is_client_connect = True
         self.__sys_final_ctrl = _SYS_CTRL_EXIT
@@ -39,7 +50,7 @@ class Connection(RepeatTimer):
         return 'Server address: %s | Client address: %s' % (self.__server_address, self.__client_address)
 
     def init_phase(self):
-        self.__server_sock.settimeout(300)
+        self.__server_sock.settimeout(self.server_timeout)
         self.__server_sock.listen(1)
         log.info('Connection Server Address => %s:%d' % self.__server_address)
 
@@ -47,6 +58,7 @@ class Connection(RepeatTimer):
         try:
             log.info('Waiting Client Connect...')
             client, address = self.__server_sock.accept()
+            client.settimeout(self.client_timeout)
             self.__handle_client(client, address)
             client.close()
         except VerificationError as VE:
@@ -145,7 +157,6 @@ class Connection(RepeatTimer):
         if not acquired:
             return
         try:
-            log.info(f'Send Message{message.keys()}')
             message = dumps(message).encode(self.__format)
             header_bytes = pack(self.__header_format, len(message))
             self.__send_all(client, header_bytes)
