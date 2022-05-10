@@ -179,7 +179,7 @@ detector.load_model('yolov4-416')
 輸入:先接受4個Byte，並且轉換成整數N，接受整數N個Bytes(UTF-8)，轉換成字串M，最後將M解析成JSON格式，再次循環。  
 輸出:將JSON解析成字串，再轉換成Bytes M，計算M的長度N，傳送N(4 Bytes)，傳送M(N Bytes)，再次循環。  
 ![](docs/SocketFormat.png)
-![](docs/MessageChange.png)
+![](docs/MessageExchange.png)
 
 ### Software Architecture
 
