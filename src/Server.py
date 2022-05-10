@@ -5,7 +5,7 @@ from time import sleep
 from configparser import ConfigParser
 from .Connection import Connection, ConnectionBuilder
 from .Monitor import Monitor
-from .utils.Commands import FRAME, SYS_INFO, CONFIGS, CONFIG
+from .utils.API import FRAME, SYS_INFO, CONFIGS, CONFIG
 from .utils.util import get_hostname
 from .RepeatTimer import RepeatTimer
 from .Streamer import Streamer, StreamerBuilder
