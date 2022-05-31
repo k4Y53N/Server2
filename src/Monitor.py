@@ -3,6 +3,7 @@ from Adafruit_SSD1306 import SSD1306_128_32
 from time import time, gmtime, strftime
 from .RepeatTimer import RepeatTimer
 from threading import Lock
+from typing import Optional
 
 
 class Monitor(RepeatTimer):
@@ -68,7 +69,7 @@ class Monitor(RepeatTimer):
             t1, t2 = t2, t1
         return strftime(self.time_fmt, gmtime(t2 - t1))
 
-    def set_row_string(self, index: int, row_str: str):
+    def set_row_string(self, index: int, row_str: Optional[str]):
         index = int(index % len(self.rows))
         if row_str is None:
             row_str = ''
