@@ -132,4 +132,7 @@ if __name__ == '__main__':
         monitor.close()
         streamer.close()
         pwm_controller.close()
+        monitor.join()
+        streamer.join()
+        pwm_controller.join()
         exit(0)
