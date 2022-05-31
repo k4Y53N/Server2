@@ -12,7 +12,8 @@ monitor = Monitor()
 streamer = Streamer(builder.get_streamer_builder())
 pwm_controller = PWMController((builder.pwm_speed_port, builder.pwm_angle_port), builder.pwm_frequency,
                                builder.is_pwm_listen)
-s = Server('127.0.0.1', 5050)
+s = Server(builder.ip, 5050)
+monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 
 
 @s.enter(monitor, pass_address=True)
@@ -124,4 +125,11 @@ if __name__ == '__main__':
     monitor.start()
     streamer.start()
     pwm_controller.start()
-    s.run()
+    try:
+        s.run()
+    except KeyboardInterrupt:
+        log.warning('Ctrl + C')
+        monitor.close()
+        streamer.close()
+        pwm_controller.close()
+        exit(0)
