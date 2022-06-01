@@ -82,6 +82,11 @@ class ClientHandler(RepeatTimer):
         self.encoding = 'utf-8'
         self.event_handler = event_handler
         self.is_show_exc_info = is_show_exc_info
+        self.last_cmd = None
+        self.ip, self.port = self.sock.getpeername()
+
+    def __str__(self):
+        return f'Client address => {self.ip}:{self.port} | last CMD: {self.last_cmd}'
 
     def init_phase(self):
         pass
@@ -143,6 +148,7 @@ class AsyncClientHandler(ClientHandler):
     def execute_phase(self):
         try:
             message = self.get()
+            self.last_cmd = message
             if message is None:
                 return
             if type(message) is str:
