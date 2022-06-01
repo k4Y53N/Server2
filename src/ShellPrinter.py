@@ -1,8 +1,9 @@
 import os
 import sys
+import threading
 from shutil import get_terminal_size
-from .RepeatTimer import RepeatTimer
 from typing import Iterable
+from .RepeatTimer import RepeatTimer
 
 
 def bar(bar_width, percent, char='#', blank_char=' ') -> str:
@@ -13,9 +14,10 @@ def bar(bar_width, percent, char='#', blank_char=' ') -> str:
 
 
 class Printer(RepeatTimer):
-    def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False):
+    def __init__(self, printable_objs: Iterable, interval=0.1, show_usage=False, show_all_thread=False):
         RepeatTimer.__init__(self, interval=interval, name='ShellPrinter')
         self.show_usage = show_usage
+        self.show_all_thread = show_all_thread
         self.objs = printable_objs
         self.bar_width = 30
         self.padding_width = get_terminal_size()[0]
@@ -32,6 +34,9 @@ class Printer(RepeatTimer):
             for s in str(obj).split('\n'):
                 if s:
                     self.print(s)
+        if self.show_all_thread:
+            for index, t in enumerate(threading.enumerate()):
+                self.print('Thread-%s: %s' % (index, t))
 
     def close_phase(self):
         del self.objs
@@ -85,30 +90,29 @@ class LinuxShellPrinter(Printer):
             with os.popen(cmd, 'r') as f:
                 cpu_usage = f.readline()
             percent = round(float(cpu_usage))
-        except Exception as E:
-            return 'Fail to get Memory usage %s' % E.args[0]
-
-        return (self.bar(percent) + ' CPU').rstrip()
+            return (self.bar(percent) + ' CPU').rstrip()
+        except Exception:
+            return 'Fail to get Memory usage %s'
 
     def get_memory_usage(self) -> str:
         # free -m | grep ':' | awk '{print $1, $2, $3}'
         cmd = "free -m | grep ':' | awk '{print $1, $2, $3}'"
-        s = ''
         try:
+            usage = ''
             with os.popen(cmd, 'r') as f:
                 usages = [
                     [s for s in line.strip().split()]
                     for line in f.readlines()
                 ]
             for name, total, used in usages:
-                name = name[:len(name) - 1]
+                name = name[:-1]
                 total = int(total)
                 used = int(used)
-                s += self.bar(used / total * 100) + ' %dMB / %dMB %s\n' % (used, total, name)
-        except Exception as E:
-            return 'Fail to get Memory usage %s' % str(E.args[0])
+                usage += self.bar(used / total * 100) + ' %dMB / %dMB %s\n' % (used, total, name)
+        except Exception:
+            return 'Fail to get Memory usage'
 
-        return s.rstrip()
+        return usage.rstrip()
 
 
 class ShellPrinter:
