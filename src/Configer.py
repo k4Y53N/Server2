@@ -12,6 +12,7 @@ class Configer:
         self.server_timeout = float(config['Server']['server_timeout'])
         self.client_timeout = float(config['Server']['client_timeout'])
         self.max_connection = int(config['Server']['max_connection'])
+        self.log_level = int(config['Server']['log_level'])
         self.is_show_exc_info = config.getboolean('Server', 'is_show_exc_info')
         self.pwm_speed_port = int(config['PWM']['pwm_speed_port'])
         self.pwm_angle_port = int(config['PWM']['pwm_angle_port'])
