@@ -36,6 +36,7 @@ s = Server(
 )
 monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 shell_printer = ShellPrinter(s, pwm_controller, streamer)
+shell_printer.show_all_thread = True
 
 
 @s.enter(monitor, pass_address=True)
