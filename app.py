@@ -1,18 +1,17 @@
+import os
 import logging as log
 from typing import Tuple
-from src.Server import Server, ServerBuilder
+from pathlib import Path
+from time import strftime
+from src.Server import Server
 from src.Monitor import Monitor
 from src.API import FRAME, SYS_INFO, CONFIGS, CONFIG
-from src.Streamer import Streamer, StreamerBuilder
+from src.Streamer import Streamer
 from src.PWMController import PWMController
 from src.Configer import Configer
+from src.ShellPrinter import ShellPrinter
 
 configer = Configer('./sys.ini')
-server_builder = ServerBuilder() \
-    .set_ip(configer.ip) \
-    .set_port(configer.port) \
-    .set_max_connection(configer.max_connection) \
-    .set_is_show_exc_info(configer.is_show_exc_info)
 
 streamer = Streamer(
     max_fps=configer.max_fps,
@@ -36,6 +35,7 @@ s = Server(
     configer.is_show_exc_info
 )
 monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
+shell_printer = ShellPrinter(s, pwm_controller, streamer)
 
 
 @s.enter(monitor, pass_address=True)
@@ -145,17 +145,29 @@ def mov(message, pwm, *args, **kwargs):
 
 
 if __name__ == '__main__':
+    log_dir = Path('logs')
+    log_file_path = (log_dir / strftime('%YY%mM%dD %HH%Mm%Ss')).with_suffix('.log')
+    os.makedirs(str(log_dir), exist_ok=True)
+    log.basicConfig(
+        format='%(asctime)s %(levelname)s:%(message)s',
+        filename=str(log_file_path),
+        datefmt='%Y/%m/%d %H:%M:%S',
+        level=configer.log_level,
+    )
     monitor.start()
     streamer.start()
     pwm_controller.start()
+    shell_printer.start()
     try:
         s.run()
     except KeyboardInterrupt:
         log.warning('Ctrl + C')
+    finally:
         monitor.close()
         streamer.close()
         pwm_controller.close()
+        shell_printer.close()
         monitor.join()
         streamer.join()
         pwm_controller.join()
-        exit(0)
+        shell_printer.close()
