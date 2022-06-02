@@ -149,6 +149,7 @@ if __name__ == '__main__':
     log_dir = Path('logs')
     log_file_path = (log_dir / strftime('%YY%mM%dD %HH%Mm%Ss')).with_suffix('.log')
     os.makedirs(log_dir, exist_ok=True)
+    log_file_path.touch(exist_ok=True)
     log.basicConfig(
         format='%(asctime)s %(levelname)s:%(message)s',
         filename=str(log_file_path),
