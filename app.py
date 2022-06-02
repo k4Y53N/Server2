@@ -171,3 +171,4 @@ if __name__ == '__main__':
         streamer.join()
         pwm_controller.join()
         shell_printer.close()
+        shell_printer.clean_screen()
