@@ -12,6 +12,16 @@ from src.Configer import Configer
 from src.ShellPrinter import ShellPrinter
 
 configer = Configer('./sys.ini')
+log_dir = Path('logs')
+log_file_path = (log_dir / strftime('%YY%mM%dD %HH%Mm%Ss')).with_suffix('.log')
+os.makedirs(log_dir, exist_ok=True)
+log_file_path.touch(exist_ok=True)
+log.basicConfig(
+    format='%(asctime)s %(levelname)s:%(message)s',
+    filename=str(log_file_path),
+    datefmt='%Y/%m/%d %H:%M:%S',
+    level=configer.log_level,
+)
 
 streamer = Streamer(
     max_fps=configer.max_fps,
@@ -145,16 +155,6 @@ def mov(message, pwm, *args, **kwargs):
 
 
 if __name__ == '__main__':
-    log_dir = Path('logs')
-    log_file_path = (log_dir / strftime('%YY%mM%dD %HH%Mm%Ss')).with_suffix('.log')
-    os.makedirs(log_dir, exist_ok=True)
-    log_file_path.touch(exist_ok=True)
-    log.basicConfig(
-        format='%(asctime)s %(levelname)s:%(message)s',
-        filename=str(log_file_path),
-        datefmt='%Y/%m/%d %H:%M:%S',
-        level=log.INFO,
-    )
     monitor.start()
     streamer.start()
     pwm_controller.start()
