@@ -20,40 +20,34 @@ class Frame:
         return bool(self.b64image)
 
 
-class StreamerBuilder:
-    def __init__(self):
-        self.max_fps = 30
-        self.idle_interval = 1
-        self.stream_timeout = None
-        self.jpg_encode_rate = 50
-        self.is_show_exc_info = False
-        self.yolo_config_dir = ''
-        self.is_local_detector = True
-        self.remote_detector_ip = 'localhost'
-        self.remote_detector_port = 0
-
-    def get_detector_builder(self) -> DetectorBuilder:
-        detector_builder = DetectorBuilder()
-        detector_builder.yolo_configs_dir = self.yolo_config_dir
-        detector_builder.is_local_detector = self.is_local_detector
-        detector_builder.is_show_exc_info = self.is_show_exc_info
-        detector_builder.remote_detector_ip = self.remote_detector_ip
-        detector_builder.remote_detector_port = self.remote_detector_port
-
-        return detector_builder
-
-
 class Streamer:
-    def __init__(self, builder: StreamerBuilder):
-        self.camera = Camera(encode_quality=builder.jpg_encode_rate)
-        self.detector = Detector(builder.get_detector_builder())
+    def __init__(
+            self,
+            max_fps=30,
+            idle_interval=1,
+            stream_timeout=10,
+            jpg_encode_rate=50,
+            is_local_detector=False,
+            yolo_configs_dir='./',
+            remote_detector_ip='127.0.0.1',
+            remote_detector_port=5050,
+            is_show_exc_info=False
+    ):
+        self.camera = Camera(jpg_encode_rate)
+        self.detector = Detector(
+            is_local_detector,
+            yolo_configs_dir,
+            remote_detector_ip,
+            remote_detector_port,
+            is_show_exc_info
+        )
         self.thread_pool = ThreadPoolExecutor(5)
-        self.exc_info = builder.is_show_exc_info
+        self.exc_info = is_show_exc_info
         self.__is_infer = False
         self.__is_stream = False
-        self.interval = 1 / builder.max_fps if builder.max_fps > 0 else 1
-        self.idle_interval = builder.idle_interval
-        self.timeout = builder.stream_timeout
+        self.interval = 1 / max_fps if max_fps > 0 else 1
+        self.idle_interval = idle_interval
+        self.timeout = stream_timeout
         self.lock = Lock()
 
     def __str__(self):
@@ -145,3 +139,75 @@ class Streamer:
 
     def is_infer(self):
         return self.__is_infer
+
+
+class StreamerBuilder:
+    def __init__(self):
+        self.max_fps = 30
+        self.idle_interval = 1
+        self.stream_timeout = None
+        self.jpg_encode_rate = 50
+        self.is_show_exc_info = False
+        self.yolo_config_dir = ''
+        self.is_local_detector = True
+        self.remote_detector_ip = 'localhost'
+        self.remote_detector_port = 0
+
+    def set_max_fps(self, max_fps):
+        self.max_fps = max_fps
+        return self
+
+    def set_idle_interval(self, idle_interval):
+        self.idle_interval = idle_interval
+        return self
+
+    def set_stream_timeout(self, stream_timeout):
+        self.stream_timeout = stream_timeout
+        return self
+
+    def set_jpg_encode_rate(self, jpg_encode_rate):
+        self.jpg_encode_rate = jpg_encode_rate
+        return self
+
+    def set_is_show_exc_info(self, is_show_exc_info):
+        self.is_show_exc_info = is_show_exc_info
+        return self
+
+    def set_yolo_config_dir(self, yolo_config_dir):
+        self.yolo_config_dir = yolo_config_dir
+        return self
+
+    def set_is_local_detector(self, is_local_detector):
+        self.is_local_detector = is_local_detector
+        return self
+
+    def set_remote_detector_ip(self, remote_detector_ip):
+        self.remote_detector_ip = remote_detector_ip
+        return self
+
+    def set_remote_detector_port(self, remote_detector_port):
+        self.remote_detector_port = remote_detector_port
+        return self
+
+    def get_detector_builder(self) -> DetectorBuilder:
+        detector_builder = DetectorBuilder()
+        detector_builder.yolo_configs_dir = self.yolo_config_dir
+        detector_builder.is_local_detector = self.is_local_detector
+        detector_builder.is_show_exc_info = self.is_show_exc_info
+        detector_builder.remote_detector_ip = self.remote_detector_ip
+        detector_builder.remote_detector_port = self.remote_detector_port
+
+        return detector_builder
+
+    def get_streamer(self) -> Streamer:
+        return Streamer(
+            self.max_fps,
+            self.idle_interval,
+            self.stream_timeout,
+            self.jpg_encode_rate,
+            self.is_local_detector,
+            self.yolo_config_dir,
+            self.remote_detector_ip,
+            self.remote_detector_port,
+            self.is_show_exc_info
+        )

@@ -12,7 +12,14 @@ class DetectorBuilder:
 
 
 class Detector:
-    def __new__(cls, builder: DetectorBuilder):
-        if builder.is_local_detector:
-            return LocalDetector(builder.yolo_configs_dir, is_show_exc_info=True)
-        return RemoteDetector(builder.remote_detector_ip, builder.remote_detector_port, builder.is_show_exc_info)
+    def __new__(
+            cls,
+            is_local_detector,
+            yolo_configs_dir,
+            remote_detector_ip,
+            remote_detector_port,
+            is_show_exc_info
+    ):
+        if is_local_detector:
+            return LocalDetector(yolo_configs_dir, is_show_exc_info=is_show_exc_info)
+        return RemoteDetector(remote_detector_ip, remote_detector_port, is_show_exc_info)

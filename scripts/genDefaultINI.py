@@ -9,7 +9,8 @@ if __name__ == '__main__':
         'server_timeout': 300,
         'client_timeout': 60,
         'is_show_exc_info': True,
-        'log_level': log.INFO
+        'max_connection': 1,
+        'log_level': log.INFO,
     }
 
     config['PWM'] = {

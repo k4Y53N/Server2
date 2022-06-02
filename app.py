@@ -1,18 +1,40 @@
-from src.Server import Server, ServerBuilder
 import logging as log
 from typing import Tuple
-
+from src.Server import Server, ServerBuilder
 from src.Monitor import Monitor
 from src.API import FRAME, SYS_INFO, CONFIGS, CONFIG
-from src.Streamer import Streamer
+from src.Streamer import Streamer, StreamerBuilder
 from src.PWMController import PWMController
+from src.Configer import Configer
 
-builder = ServerBuilder('./sys.ini')
+configer = Configer('./sys.ini')
+server_builder = ServerBuilder() \
+    .set_ip(configer.ip) \
+    .set_port(configer.port) \
+    .set_max_connection(configer.max_connection) \
+    .set_is_show_exc_info(configer.is_show_exc_info)
+
+streamer = Streamer(
+    max_fps=configer.max_fps,
+    idle_interval=configer.idle_interval,
+    stream_timeout=configer.stream_timeout,
+    jpg_encode_rate=configer.jpg_encode_rate,
+    is_local_detector=configer.is_local_detector,
+    yolo_configs_dir=configer.yolo_configs_dir,
+    remote_detector_ip=configer.remote_detector_ip,
+    remote_detector_port=configer.remote_detector_port,
+    is_show_exc_info=configer.is_show_exc_info
+)
 monitor = Monitor()
-streamer = Streamer(builder.get_streamer_builder())
-pwm_controller = PWMController((builder.pwm_speed_port, builder.pwm_angle_port), builder.pwm_frequency,
-                               builder.is_pwm_listen)
-s = Server(builder.ip, 5050)
+
+pwm_controller = PWMController((configer.pwm_speed_port, configer.pwm_angle_port), configer.pwm_frequency,
+                               configer.is_pwm_listen)
+s = Server(
+    configer.ip,
+    configer.port,
+    configer.max_connection,
+    configer.is_show_exc_info
+)
 monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 
 
@@ -33,10 +55,11 @@ def stream(st: Streamer, *args, **kwargs):
     return frame
 
 
-@s.exit(streamer, monitor, pass_address=True)
-def client_exit(st: Streamer, m: Monitor, address: Tuple = ('127.0.0.1', 0), *args, **kwargs):
+@s.exit(streamer, monitor, pwm_controller, pass_address=True)
+def client_exit(st: Streamer, m: Monitor, pwm: PWMController, address: Tuple = ('127.0.0.1', 0), *args, **kwargs):
     st.reset()
     m.set_row_string(1, None)
+    pwm.reset()
     log.info('Client %s:%s disconnect' % address)
 
 
