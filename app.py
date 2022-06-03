@@ -91,6 +91,7 @@ def get_sys_info(message, *args, **kwargs):
 
 @s.response('GET_CONFIGS', streamer)
 def get_configs(message, st: Streamer, *args, **kwargs):
+    log.info('Get configs')
     configs = CONFIGS.copy()
     configs['CONFIGS'] = {
         key: {
@@ -106,6 +107,7 @@ def get_configs(message, st: Streamer, *args, **kwargs):
 
 @s.response('GET_CONFIG', streamer)
 def get_config(message, st: Streamer, *args, **kwargs):
+    log.info('Get config')
     config = CONFIG.copy()
     yolo_config = st.get_config()
     if yolo_config is None:
@@ -122,6 +124,13 @@ def get_config(message, st: Streamer, *args, **kwargs):
         config['CLASSES'] = yolo_config.classes
 
     return config
+
+
+@s.response('SET_CONFIG', streamer)
+def set_config(message: dict, st: Streamer, *args, **kwargs):
+    config_name = message.get('CONFIG')
+    log.info(f'Set config {config_name}')
+    st.set_config(config_name)
 
 
 @s.response('SET_INFER', streamer)
