@@ -32,6 +32,7 @@ streamer = Streamer(
     yolo_configs_dir=configer.yolo_configs_dir,
     remote_detector_ip=configer.remote_detector_ip,
     remote_detector_port=configer.remote_detector_port,
+    remote_detector_timeout=configer.remote_detector_timeout,
     is_show_exc_info=configer.is_show_exc_info
 )
 monitor = Monitor()

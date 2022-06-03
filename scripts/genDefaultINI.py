@@ -31,7 +31,8 @@ if __name__ == '__main__':
         'configs': 'configs/',
         'is_local_detector': True,
         'detect_server_ip': '192.168.0.1',
-        'detect_server_port': 0
+        'detect_server_port': 0,
+        'timeout': 10
     }
     with open('./sys.ini', 'w') as f:
         config.write(f)

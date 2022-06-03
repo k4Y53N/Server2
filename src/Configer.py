@@ -26,3 +26,4 @@ class Configer:
         self.is_local_detector = config.getboolean('Detector', 'is_local_detector')
         self.remote_detector_ip = config['Detector']['detect_server_ip']
         self.remote_detector_port = int(config['Detector']['detect_server_port'])
+        self.remote_detector_timeout = float(config['Detector']['timeout'])
