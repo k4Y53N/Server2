@@ -13,7 +13,7 @@ from src.ShellPrinter import ShellPrinter
 
 configer = Configer('./sys.ini')
 log_dir = Path('logs')
-log_file_path = (log_dir / strftime('%YY%mM%dD %HH%Mm%Ss')).with_suffix('.log')
+log_file_path = (log_dir / strftime('%YY%mM%dD%HH%Mm%Ss')).with_suffix('.log')
 os.makedirs(log_dir, exist_ok=True)
 log_file_path.touch(exist_ok=True)
 log.basicConfig(
