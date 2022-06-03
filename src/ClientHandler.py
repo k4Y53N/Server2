@@ -124,6 +124,7 @@ class AsyncClientHandler(ClientHandler):
                 raise TypeError('Get unexpected JSON message')
             main_key = message.get(MAIN_KEY, None)
             if main_key is None:
+                log.warning(f'Cant get key: {message}')
                 raise KeyError('Message dint define main key')
             response_func_map = self.event_handler.get_response_func_map()
             func, args, kwargs = response_func_map.get(main_key, (None, (), {}))
