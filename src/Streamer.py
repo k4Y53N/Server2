@@ -36,12 +36,12 @@ class Streamer:
     ):
         self.camera = Camera(jpg_encode_rate)
         if is_local_detector:
-            self.detector = ConfigManager(
+            self.config_manager = ConfigManager(
                 yolo_configs_dir,
                 is_show_exc_info=is_show_exc_info
             )
         else:
-            self.detector = RemoteConfigManager(
+            self.config_manager = RemoteConfigManager(
                 remote_detector_ip,
                 remote_detector_port,
                 remote_detector_timeout,
@@ -58,7 +58,7 @@ class Streamer:
         self.lock = Lock()
 
     def __str__(self):
-        return str(self.detector) + '\n' + str(self.camera)
+        return str(self.config_manager) + '\n' + str(self.camera)
 
     def start(self):
         self.camera.start()
@@ -71,14 +71,14 @@ class Streamer:
             self.__is_infer = False
             self.__is_stream = False
             self.camera.reset()
-            self.detector.reset()
+            self.config_manager.reset()
 
     def close(self):
         with self.lock:
             self.__is_infer = False
             self.__is_stream = False
             self.camera.close()
-            self.detector.close()
+            self.config_manager.close()
         self.thread_pool.shutdown(True)
 
     def get(self) -> Frame:
@@ -107,7 +107,7 @@ class Streamer:
         return frame
 
     def infer_and_encode_image(self, image) -> Frame:
-        detecting = self.thread_pool.submit(self.detector.detect, image)
+        detecting = self.thread_pool.submit(self.config_manager.detect, image)
         encoding = self.thread_pool.submit(self.camera.encode_image_to_b64, image)
         try:
             b64image = encoding.result(timeout=self.timeout)
@@ -126,17 +126,17 @@ class Streamer:
             self.__is_infer = is_infer
 
     def set_config(self, config_name):
-        thread = Thread(target=self.detector.set_config, args=(config_name,))
+        thread = Thread(target=self.config_manager.set_config, args=(config_name,))
         thread.start()
 
     def set_quality(self, width, height):
         self.camera.set_quality(width, height)
 
     def get_configs(self) -> Dict[str, YOLOConfiger]:
-        return self.detector.get_configs()
+        return self.config_manager.get_configs()
 
     def get_config(self) -> Optional[YOLOConfiger]:
-        return self.detector.get_config()
+        return self.config_manager.get_config()
 
     def get_quality(self):
         return self.camera.get_quality()
