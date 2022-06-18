@@ -3,8 +3,8 @@ from threading import Thread, Lock
 from time import sleep, perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
-from .Detector import ConfigManager, DetectResult, YOLOConfiger, RemoteConfigManager
 from .Camera import Camera
+from .Detector import ConfigManager, DetectResult, YOLOConfiger, RemoteConfigManager
 
 
 class Frame:
