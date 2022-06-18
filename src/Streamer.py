@@ -3,7 +3,7 @@ from threading import Thread, Lock
 from time import sleep, perf_counter
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional
-from .Detector import Detector, DetectResult, YOLOConfiger, RemoteDetector
+from .Detector import ConfigManager, DetectResult, YOLOConfiger, RemoteConfigManager
 from .Camera import Camera
 
 
@@ -36,12 +36,12 @@ class Streamer:
     ):
         self.camera = Camera(jpg_encode_rate)
         if is_local_detector:
-            self.detector = Detector(
+            self.detector = ConfigManager(
                 yolo_configs_dir,
                 is_show_exc_info=is_show_exc_info
             )
         else:
-            self.detector = RemoteDetector(
+            self.detector = RemoteConfigManager(
                 remote_detector_ip,
                 remote_detector_port,
                 remote_detector_timeout,
@@ -126,7 +126,7 @@ class Streamer:
             self.__is_infer = is_infer
 
     def set_config(self, config_name):
-        thread = Thread(target=self.detector.load_model, args=(config_name,))
+        thread = Thread(target=self.detector.set_config, args=(config_name,))
         thread.start()
 
     def set_quality(self, width, height):

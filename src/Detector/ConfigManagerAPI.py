@@ -3,8 +3,8 @@ MAIN_KEY = 'CMD'
 """
 SEND
 """
-LOAD_MODEL = {
-    MAIN_KEY: 'LOAD_MODEL',
+SET_CONFIG = {
+    MAIN_KEY: 'SET_CONFIG',
     'CONFIG_NAME': ''
 }
 

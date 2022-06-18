@@ -2,23 +2,27 @@ import json
 import os
 import numpy as np
 from pathlib import Path
-
-
-def load_json(config_path):
-    with open(config_path, 'r') as f:
-        config = json.load(f)
-
-    return config
+from typing import Union, Optional
 
 
 class YOLOConfiger:
-    def __init__(self, config):
-        if type(config) is dict:
+    def __init__(self, config: Union[dict, str, Path]):
+        self.config: Optional[dict] = None
+        self.config_path: Optional[str] = None
+        config_type = type(config)
+        if config_type is dict:
             self.config_path = ''
-            self.config = config
-        else:
+            self.config = dict(config)
+        elif config_type is str:
             self.config_path = config
-            self.config = load_json(config)
+            with open(config, 'r') as f:
+                self.config = json.load(f)
+        elif config_type is Path:
+            self.config_path = str(config)
+            with config.open('r') as f:
+                self.config = json.load(f)
+        else:
+            raise TypeError('Wrong config type')
 
         self.name = self.config['name']
         self.model_path = self.config['model_path']

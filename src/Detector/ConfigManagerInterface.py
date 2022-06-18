@@ -4,8 +4,8 @@ from typing import Dict, Optional
 import numpy as np
 
 
-class DetectorInterface:
-    def load_model(self, config_name):
+class ConfigManagerInterface:
+    def set_config(self, config_name):
         pass
 
     def detect(self, image: np.ndarray) -> DetectResult:

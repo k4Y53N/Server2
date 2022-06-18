@@ -3,8 +3,8 @@ import numpy as np
 import logging as log
 from base64 import b64decode
 from typing import Optional
-from src.Detector.Detector import Detector
-from src.Detector.DetectorAPI import RESULT, CONFIG, CONFIGS
+from src.Detector.ConfigManager import ConfigManager
+from src.Detector.ConfigManagerAPI import RESULT, CONFIG, CONFIGS
 from src.Server import Server
 from src.utils.util import get_hostname
 
@@ -21,18 +21,18 @@ log.basicConfig(
 )
 
 s = Server(get_hostname(), 5050, 1, is_show_exc_info=True)
-detector = Detector('./configs/', True, )
+detector = ConfigManager('./configs/', True, )
 
 
-@s.response('LOAD_MODEL', detector)
-def load_model(message: dict, d: Detector):
-    log.info('Load model')
+@s.response('SET_CONFIG', detector)
+def load_model(message: dict, d: ConfigManager):
+    log.info('SET_CONFIG')
     config_name = message.get('CONFIG_NAME')
-    d.load_model(config_name)
+    d.set_config(config_name)
 
 
 @s.response('DETECT', detector)
-def detect(message: dict, d: Detector):
+def detect(message: dict, d: ConfigManager):
     log.info('Detect image')
     result = RESULT.copy()
     b64image = message.get('IMAGE', '')
@@ -47,20 +47,20 @@ def detect(message: dict, d: Detector):
 
 
 @s.response('RESET', detector)
-def reset(message, d: Detector):
+def reset(message, d: ConfigManager):
     log.info('Reset')
     d.reset()
 
 
 @s.response('CLOSE')
-def close(message, d: Detector):
+def close(message, d: ConfigManager):
     log.info('close')
     d.close()
     raise RuntimeError('Close Detector')
 
 
 @s.response('GET_CONFIG', detector)
-def get_config(message, d: Detector):
+def get_config(message, d: ConfigManager):
     log.info('Get config')
     config = CONFIG.copy()
     configer = d.get_config()
@@ -75,7 +75,7 @@ def get_config(message, d: Detector):
 
 
 @s.response('GET_CONFIGS', detector)
-def get_configs(message, d: Detector):
+def get_configs(message, d: ConfigManager):
     log.info('Get configs')
     configs = CONFIGS.copy()
 

@@ -1,4 +1,4 @@
-from .Detector import Detector
+from .ConfigManager import ConfigManager
 from .DetectResult import DetectResult
-from .RemoteDetector import RemoteDetector
+from .RemoteConfigManager import RemoteConfigManager
 from .core import YOLOConfiger

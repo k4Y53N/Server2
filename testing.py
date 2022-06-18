@@ -15,15 +15,15 @@ if gpus:
         print(e)
 
 from pathlib import Path
-from src.Detector.Detector import Detector
+from src.Detector.ConfigManager import ConfigManager
 # from timeit import timeit
 
 p = Path('configs/')
-d = Detector(p)
+d = ConfigManager(p)
 image = cv2.imread('person.jpg')
 d.__score_threshold = 0.1
 d.__iou_threshold = 0.5
-d.load_model('yolov4-416.json')
+d.set_config('yolov4-416.json')
 # d.model.save_weights('person-320-noPre.h5')
 # d.model.save('checkpoints/person-320-noPre')
 result = d.detect(image)

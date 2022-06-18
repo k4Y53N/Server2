@@ -3,9 +3,9 @@ import numpy as np
 import logging as log
 from typing import Dict, Optional
 from base64 import b64encode
-from .DetectorInterface import DetectorInterface
+from .ConfigManagerInterface import ConfigManagerInterface
 from .DetectResult import DetectResult
-from .DetectorAPI import LOAD_MODEL, DETECT, RESET, CLOSE, GET_CONFIG, GET_CONFIGS
+from .ConfigManagerAPI import SET_CONFIG, DETECT, RESET, CLOSE, GET_CONFIG, GET_CONFIGS
 from .core import YOLOConfiger
 from ..Client import Client
 
@@ -19,7 +19,7 @@ def encode_b64image(image: np.ndarray, width, height) -> str:
     return b64encode(jpg.tobytes()).decode()
 
 
-class RemoteDetector(DetectorInterface):
+class RemoteConfigManager(ConfigManagerInterface):
     def __init__(self, ip, port, timeout, is_show_exc_info):
         self.client = Client(ip, port, timeout, is_show_exc_info)
         self.is_show_exc_info = is_show_exc_info
@@ -27,8 +27,8 @@ class RemoteDetector(DetectorInterface):
     def __str__(self):
         return 'Remote Detector address => %s:%s' % (self.client.ip, self.client.port)
 
-    def load_model(self, config_name):
-        cmd = LOAD_MODEL.copy()
+    def set_config(self, config_name):
+        cmd = SET_CONFIG.copy()
         cmd['CONFIG_NAME'] = config_name
         self.client.send(cmd)
 
