@@ -26,7 +26,7 @@ class Printer(RepeatTimer):
         pass
 
     def execute_phase(self):
-        self.clean_screen()
+        self.reset_cursor()
         if self.show_usage:
             self.print(self.get_cpu_usage())
             self.print(self.get_memory_usage())
@@ -45,11 +45,14 @@ class Printer(RepeatTimer):
         print(s.ljust(self.padding_width))
 
     @staticmethod
-    def clean_screen():
+    def reset_cursor():
         print("\033[H\033[1J", end='')
 
     def set_show_usage(self, show_usage: bool):
         self.show_usage = show_usage
+
+    def clean_screen(self):
+        pass
 
     def get_cpu_usage(self) -> str:
         pass
@@ -66,6 +69,9 @@ class WindowsShellPrinter(Printer):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
 
     def init_phase(self):
+        self.clean_screen()
+
+    def clean_screen(self):
         os.system('cls')
 
     def get_cpu_usage(self):
@@ -80,6 +86,9 @@ class LinuxShellPrinter(Printer):
         Printer.__init__(self, printable_objs, interval=interval, show_usage=show_usage)
 
     def init_phase(self):
+        self.clean_screen()
+
+    def clean_screen(self):
         os.system('clear')
 
     def get_cpu_usage(self) -> str:

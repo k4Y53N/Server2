@@ -178,7 +178,6 @@ if __name__ == '__main__':
         streamer.close()
         pwm_controller.close()
         shell_printer.close()
-        shell_printer.close()
         monitor.join()
         streamer.join()
         pwm_controller.join()
