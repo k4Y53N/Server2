@@ -115,9 +115,9 @@ class AsyncClientHandler(ClientHandler):
     def execute_phase(self):
         try:
             message = self.get()
-            self.last_cmd = message
             if message is None:
                 return
+            self.last_cmd = message
             if type(message) is str:
                 message = json.loads(message)
             if type(message) is not dict:
@@ -206,6 +206,7 @@ class AsyncClientHandler(ClientHandler):
             obj = json.dumps(obj)
             self.output_buffer.put(obj, True, 0.2)
         except TypeError:
+            log.error(f'Cant parse obj to json: {obj}', exc_info=self.is_show_exc_info)
             return
         except Full:
             log.error('Output buffer overflow', exc_info=self.is_show_exc_info)
