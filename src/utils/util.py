@@ -52,7 +52,7 @@ def get_hostname() -> str:
 
 def read_pwd(pwd_path) -> str:
     with open(pwd_path, 'r') as f:
-        pwd = f.readline()
+        pwd = f.read().strip()
     return pwd
 
 
