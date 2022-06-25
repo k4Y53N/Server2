@@ -60,6 +60,7 @@ def login(message: dict, password, *args, **kwargs) -> Tuple[bool, dict]:
     p = message.get('PWD', '')
     log.info(f'client pwd {p}  type{type(p)}')
     log.info(f'server pwd {password} type{type(password)}')
+    log.info(f'is qu {p == password}')
     log_info = LOGIN_INFO.copy()
     if p != password:
         log_info['VERIFY'] = False
