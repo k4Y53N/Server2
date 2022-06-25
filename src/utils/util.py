@@ -25,14 +25,13 @@ def timeit(func):
 
 
 def sleep_timer(sleep_time: float = 0):
-
     def outside_wrap(func):
         def wrap(*args, **kwargs):
             start = time()
             res = func(*args, **kwargs)
             process_time = time() - start
             if process_time < sleep_time:
-                sleep(sleep_time-process_time)
+                sleep(sleep_time - process_time)
             return res
 
         return wrap
@@ -49,6 +48,12 @@ def get_hostname() -> str:
             return hostname
 
     return gethostbyname(getfqdn())
+
+
+def read_pwd(pwd_path) -> str:
+    with open(pwd_path, 'r') as f:
+        pwd = f.readline()
+    return pwd
 
 
 if __name__ == '__main__':

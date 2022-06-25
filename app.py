@@ -10,6 +10,7 @@ from src.Streamer import Streamer
 from src.PWMController import PWMController
 from src.Configer import Configer
 from src.ShellPrinter import ShellPrinter
+from src.utils.util import read_pwd
 
 configer = Configer('./sys.ini')
 log_dir = Path('logs')
@@ -23,6 +24,7 @@ log.basicConfig(
     level=configer.log_level,
 )
 
+pwd = read_pwd(configer.password_path)
 streamer = Streamer(
     max_fps=configer.max_fps,
     idle_interval=configer.idle_interval,
@@ -53,12 +55,14 @@ monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 shell_printer = ShellPrinter(s, pwm_controller, streamer)
 
 
-@s.login()
-def login(message, *args, **kwargs):
-    log.info(str(message))
-    info = LOGIN_INFO.copy()
-    info['VERIFY'] = True
-    return True, info
+@s.login(pwd)
+def login(message: dict, password, *args, **kwargs):
+    p = message.get('PWD', '')
+    log_info = LOGIN_INFO.copy()
+    if p != password:
+        return False, log_info
+    log_info['VERIFY'] = True
+    return True, log_info
 
 
 @s.enter(monitor, pass_address=True)

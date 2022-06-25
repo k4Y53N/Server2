@@ -10,6 +10,7 @@ class Configer:
         self.ip = config['Server']['ip'] if is_ip else get_hostname()
         self.port = int(config['Server']['port'])
         self.is_login = config.getboolean('Server', 'is_login')
+        self.password_path = config['Server']['password_path']
         self.server_timeout = float(config['Server']['server_timeout'])
         self.client_timeout = float(config['Server']['client_timeout'])
         self.max_connection = int(config['Server']['max_connection'])

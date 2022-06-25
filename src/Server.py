@@ -1,6 +1,6 @@
 import logging as log
 from socket import socket, AF_INET, SOCK_STREAM
-from typing import Optional
+from typing import Optional, Callable
 from .ClientHandler import AsyncClientHandler, EventHandler
 from .RepeatTimer import RepeatTimer
 
@@ -106,7 +106,7 @@ class Server(RepeatTimer):
         return wrap
 
     def enter(self, *args, **kwargs):
-        def wrap(func):
+        def wrap(func: Callable[..., (bool, dict)]):
             self.event_handler.add_enter(func, args, kwargs)
 
         return wrap

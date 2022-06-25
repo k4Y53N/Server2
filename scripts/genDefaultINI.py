@@ -7,6 +7,7 @@ if __name__ == '__main__':
         'ip': 0,
         'port': 0,
         'is_login': False,
+        'password_path': 'pwd.txt',
         'server_timeout': 300,
         'client_timeout': 60,
         'is_show_exc_info': True,
