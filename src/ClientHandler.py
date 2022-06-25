@@ -158,7 +158,7 @@ class ClientHandler(RepeatTimer):
             log.warning('Key not found', exc_info=self.is_show_exc_info)
             return None
         except Exception:
-            log.warning('Get unexpected error', exc_info=self.is_show_exc_info)
+            log.warning('Get unexpected error', exc_info=True)
             self.close()
             return None
 
