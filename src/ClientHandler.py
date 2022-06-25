@@ -9,34 +9,54 @@ from .RepeatTimer import RepeatTimer
 from .socketIO import recv, send
 
 
+class FunctionMap:
+    def __init__(self, func: Callable[..., Any], args: tuple = (), kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+        self.func: Callable[..., Any] = func
+        self.args: tuple = args
+        self.kwargs: Optional[dict] = kwargs
+
+    def get_func_arg_kwargs(self) -> Tuple[Callable[..., Any], tuple, Optional[dict]]:
+        return self.func, self.args, self.kwargs
+
+
 class EventHandler:
     def __init__(self):
-        self.response_func_map: Dict[str, Tuple[Callable, tuple, dict]] = {}
-        self.enter_func_map: Dict[Callable, Tuple[tuple, dict]] = {}
-        self.exit_func_map: Dict[Callable, Tuple[tuple, dict]] = {}
-        self.routine_func_map: Dict[Callable, Tuple[tuple, dict]] = {}
+        self.login_func_map: Optional[FunctionMap] = None
+        self.response_func_map: Dict[str, FunctionMap] = {}
+        self.enter_func_map: List[FunctionMap] = []
+        self.exit_func_map: List[FunctionMap] = []
+        self.routine_func_map: List[FunctionMap] = []
 
-    def handle(self, message: Union[str, dict]) -> Any:
-        pass
+    def set_login(self, func: Callable[..., Any], args: tuple = (), kwargs: Optional[dict] = None):
+        self.login_func_map = FunctionMap(func, args, kwargs)
 
-    def execute_enter_funcs(self):
-        for func, (args, kwargs) in self.enter_func_map.items():
-            func(*args, **kwargs)
+    def add_response(self, key: str, func: Callable[..., Any], args: tuple = (), kwargs: Optional[dict] = None):
+        self.response_func_map[key] = FunctionMap(func, args, kwargs)
 
-    def execute_exit_funcs(self):
-        for func, (args, kwargs) in self.exit_func_map.items():
-            func(*args, **kwargs)
+    def add_enter(self, func: Callable[..., Any], args: tuple = (), kwargs: Optional[dict] = None):
+        self.enter_func_map.append(FunctionMap(func, args, kwargs))
 
-    def get_response_func_map(self):
+    def add_exit(self, func: Callable[..., Any], args: tuple = (), kwargs: Optional[dict] = None):
+        self.exit_func_map.append(FunctionMap(func, args, kwargs))
+
+    def add_routine(self, func: Callable[..., Any], args: tuple = (), kwargs: Optional[dict] = None):
+        self.routine_func_map.append(FunctionMap(func, args, kwargs))
+
+    def get_login_func_map(self) -> Optional[FunctionMap]:
+        return self.login_func_map
+
+    def get_response_func_maps(self) -> dict[str, FunctionMap]:
         return self.response_func_map
 
-    def get_enter_func_map(self):
+    def get_enter_func_maps(self) -> List[FunctionMap]:
         return self.enter_func_map
 
-    def get_exit_func_map(self):
+    def get_exit_func_maps(self) -> List[FunctionMap]:
         return self.exit_func_map
 
-    def get_routine_func_map(self):
+    def get_routine_func_maps(self) -> List[FunctionMap]:
         return self.routine_func_map
 
 
@@ -58,10 +78,94 @@ class ClientHandler(RepeatTimer):
         pass
 
     def execute_phase(self):
-        pass
+        message = self.get()
+        if message is None:
+            return
+        obj = self.execute_response(message)
+        self.put(obj)
 
     def close_phase(self):
         pass
+
+    def get(self) -> Any:
+        pass
+
+    def put(self, message):
+        pass
+
+    def recv(self):
+        return recv(self.sock, self.header, self.encoding)
+
+    def send(self, message):
+        if type(message) is dict:
+            message = json.dumps(message)
+        if type(message) is not str:
+            raise TypeError('Cant parse object to json')
+        return send(self.sock, message, self.header, self.encoding)
+
+    def login(self):
+        func_map = self.event_handler.get_login_func_map()
+        if func_map is None:
+            return
+        message = self.recv()
+        message = json.loads(message)
+        func, args, kwargs = func_map.get_func_arg_kwargs()
+        kwargs = self.edit_kwargs(kwargs)
+        args = (message, *args)
+        obj = func(*args, **kwargs)
+        if obj is None:
+            return
+        if type(obj) is dict:
+            obj = json.dumps(obj)
+        if type(obj) is not str:
+            raise TypeError(f'Cant parse object to JSON {obj}')
+        self.send(obj)
+
+    def execute_func_maps(self, func_maps: List[FunctionMap]):
+        for func_map in func_maps:
+            obj = self.execute_func_map(func_map)
+            self.put(obj)
+
+    def execute_func_map(self, func_map: FunctionMap):
+        func, args, kwargs = func_map.get_func_arg_kwargs()
+        if func is None:
+            return
+        kwargs = self.edit_kwargs(kwargs)
+        return func(*args, **kwargs)
+
+    def execute_response(self, message: Union[str, dict]) -> Any:
+        try:
+            self.last_cmd = message
+            if type(message) is str:
+                message = json.loads(message)
+            if type(message) is not dict:
+                raise TypeError('Get unexpected JSON message')
+            sub_key = message.get(MAIN_KEY, None)
+            if sub_key is None:
+                raise KeyError('Message dint define main key')
+            response_func_maps = self.event_handler.get_response_func_maps()
+            func_map = response_func_maps.get(sub_key, None)
+            if func_map is None:
+                raise KeyError('Main key not found')
+            func, args, kwargs = func_map.get_func_arg_kwargs()
+            self.edit_kwargs(kwargs)
+            args = (message, *args)
+            return func(*args, **kwargs)
+        except TypeError:
+            log.warning('Get unexpected JSON message', exc_info=self.is_show_exc_info)
+            return None
+        except KeyError:
+            log.warning('Key not found', exc_info=self.is_show_exc_info)
+            return None
+        except Exception:
+            log.warning('Get unexpected error', exc_info=self.is_show_exc_info)
+            self.close()
+            return None
+
+    def edit_kwargs(self, kwargs: dict):
+        if kwargs.get('pass_address'):
+            kwargs.update({'address': self.sock.getpeername()})
+        return kwargs
 
 
 class SyncClientHandler(ClientHandler):
@@ -70,20 +174,17 @@ class SyncClientHandler(ClientHandler):
 
     def init_phase(self):
         log.info('Client address => %s:%s' % self.sock.getpeername())
-
-    def execute_phase(self):
-        try:
-            message = recv(self.sock, self.header, self.encoding)
-            response = self.event_handler.handle(message)
-            if type(response) is not str:
-                response = json.dumps(response)
-            send(self.sock, response, self.header, self.encoding)
-        except Exception:
-            log.error('Handle Client Fail', exc_info=self.is_show_exc_info)
-            self.close()
+        self.login()
+        self.execute_func_maps(self.event_handler.get_enter_func_maps())
 
     def close_phase(self):
-        self.sock.close()
+        self.execute_func_maps(self.event_handler.get_exit_func_maps())
+
+    def get(self) -> Any:
+        return self.recv()
+
+    def put(self, message):
+        self.send(message)
 
 
 class AsyncClientHandler(ClientHandler):
@@ -98,71 +199,34 @@ class AsyncClientHandler(ClientHandler):
 
     def init_phase(self):
         log.info('Client connected address => %s:%s' % self.sock.getpeername())
-        self.execute_one_time_func(self.event_handler.get_enter_func_map())
-        routine_func_map = self.event_handler.get_routine_func_map()
+        self.login()
+        self.execute_func_maps(self.event_handler.get_enter_func_maps())
 
-        for func, (args, kwargs) in routine_func_map.items():
+        for func_map in self.event_handler.get_routine_func_maps():
+            func, args, kwargs = func_map.get_func_arg_kwargs()
             if not callable(func):
                 continue
-            if kwargs.get('pass_address', False):
-                kwargs['address'] = self.sock.getpeername()
+            kwargs = self.edit_kwargs(kwargs)
             t = Thread(target=self.routine, args=(func, args, kwargs), name=func.__name__)
             self.routine_thread_pool.append(t)
 
         for t in self.routine_thread_pool:
             t.start()
 
-    def execute_phase(self):
-        try:
-            message = self.get()
-            if message is None:
-                return
-            self.last_cmd = message
-            if type(message) is str:
-                message = json.loads(message)
-            if type(message) is not dict:
-                raise TypeError('Get unexpected JSON message')
-            main_key = message.get(MAIN_KEY, None)
-            if main_key is None:
-                log.warning(f'Cant get key: {message}')
-                raise KeyError('Message dint define main key')
-            response_func_map = self.event_handler.get_response_func_map()
-            func, args, kwargs = response_func_map.get(main_key, (None, (), {}))
-            if not callable(func):
-                raise KeyError('Main key not found')
-            if kwargs.get('pass_address', False):
-                kwargs['address'] = self.sock.getpeername()
-            args = (message, *args)
-            obj = func(*args, **kwargs)
-            self.put(obj)
-        except TypeError:
-            log.warning('Get unexpected JSON message', exc_info=self.is_show_exc_info)
-        except KeyError:
-            log.warning('Key not found', exc_info=self.is_show_exc_info)
-        except Exception:
-            log.warning('Get unexpected error', exc_info=self.is_show_exc_info)
-
     def close_phase(self):
         for t in self.routine_thread_pool:
             t.join()
-        self.execute_one_time_func(self.event_handler.get_exit_func_map())
+        self.execute_func_maps(self.event_handler.get_exit_func_maps())
         self.routine_thread_pool.clear()
         with self.input_buffer.mutex:
             self.input_buffer.queue.clear()
         with self.output_buffer.mutex:
             self.output_buffer.queue.clear()
 
-    def execute_one_time_func(self, func_map: Dict[Callable, Tuple[tuple, dict]]):
-        for func, (args, kwargs) in func_map.items():
-            if kwargs.get('pass_address', False):
-                kwargs['address'] = self.sock.getpeername()
-            obj = func(*args, **kwargs)
-            self.put(obj)
-
     def __receiving(self):
         while self.is_running():
             try:
-                message = recv(self.sock, self.header, self.encoding)
+                message = self.recv()
                 self.input_buffer.put(message, True, 0.2)
             except Full:
                 self.close()
@@ -175,14 +239,14 @@ class AsyncClientHandler(ClientHandler):
         while self.is_running():
             try:
                 response = self.output_buffer.get(True, 0.2)
-                send(self.sock, response, self.header, self.encoding)
+                self.send(response)
             except Empty:
                 continue
             except Exception:
                 self.close()
                 log.error('Sending fail', exc_info=self.is_show_exc_info)
 
-    def routine(self, func: Callable, args: tuple = (), kwargs: Optional[dict] = None):
+    def routine(self, func: Callable[..., Any], args: tuple = (), kwargs: Optional[dict] = None):
         if kwargs is None:
             kwargs = {}
         while self.is_running():
@@ -203,10 +267,11 @@ class AsyncClientHandler(ClientHandler):
         if obj is None:
             return
         try:
-            obj = json.dumps(obj)
+            if type(obj) is dict:
+                obj = json.dumps(obj)
             self.output_buffer.put(obj, True, 0.2)
         except TypeError:
-            log.error(f'Cant parse obj to json: {obj}', exc_info=self.is_show_exc_info)
+            log.error(f'Cant parse object to json: {obj}', exc_info=self.is_show_exc_info)
             return
         except Full:
             log.error('Output buffer overflow', exc_info=self.is_show_exc_info)

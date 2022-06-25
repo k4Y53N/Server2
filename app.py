@@ -35,15 +35,18 @@ streamer = Streamer(
     remote_detector_timeout=configer.remote_detector_timeout,
     is_show_exc_info=configer.is_show_exc_info
 )
+
 monitor = Monitor()
 
 pwm_controller = PWMController((configer.pwm_speed_port, configer.pwm_angle_port), configer.pwm_frequency,
                                configer.is_pwm_listen)
 s = Server(
-    configer.ip,
-    configer.port,
-    configer.max_connection,
-    configer.is_show_exc_info
+    ip=configer.ip,
+    port=configer.port,
+    server_timeout=configer.server_timeout,
+    client_timeout=configer.client_timeout,
+    max_connection=configer.max_connection,
+    is_show_exc_info=configer.is_show_exc_info
 )
 monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 shell_printer = ShellPrinter(s, pwm_controller, streamer)

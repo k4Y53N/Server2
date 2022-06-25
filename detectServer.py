@@ -14,13 +14,19 @@ def decode_b64image(b64image: str) -> Optional[np.ndarray]:
     image = cv2.imdecode(np.frombuffer(buf_image, dtype=np.uint8), cv2.IMREAD_COLOR)
     return image
 
+
 log.basicConfig(
     format='%(asctime)s %(levelname)s:%(message)s',
     datefmt='%Y/%m/%d %H:%M:%S',
     level=log.INFO,
 )
 
-s = Server(get_hostname(), 5050, 1, is_show_exc_info=True)
+s = Server(
+    ip=get_hostname(),
+    port=5050,
+    max_connection=1,
+    is_show_exc_info=True
+)
 detector = ConfigManager('./configs/', True, )
 
 

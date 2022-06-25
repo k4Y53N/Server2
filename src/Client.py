@@ -52,7 +52,7 @@ class Client:
                     obj = json.dumps(obj)
                 send(self.sock, obj, self.header, self.encoding)
                 ret_obj = recv(self.sock, self.header, self.encoding)
-                ret_obj = json.loads(ret_obj)
+                # ret_obj = json.loads(ret_obj)
             except Exception:
                 log.error('Send and Recv message fail', exc_info=self.is_show_exc_info)
         return ret_obj

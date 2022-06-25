@@ -39,14 +39,26 @@ class ServerBuilder:
 
 
 class Server(RepeatTimer):
-    def __init__(self, ip, port, max_connection=1, is_show_exc_info=False):
+    def __init__(
+            self,
+            ip,
+            port,
+            is_login=False,
+            max_connection: int = 1,
+            server_timeout: Optional[float] = None,
+            client_timeout: Optional[float] = None,
+            is_show_exc_info=False
+    ):
         RepeatTimer.__init__(self)
         self.server_sock = socket(AF_INET, SOCK_STREAM)
         self.server_sock.bind((ip, port))
         self.ip, self.port = self.server_sock.getsockname()
         self.event_handler = EventHandler()
+        self.is_login = is_login
         self.is_show_exc_info = is_show_exc_info
         self.max_connection = max_connection
+        self.server_timeout = server_timeout
+        self.client_timeout = client_timeout
         self.client_handler: Optional[AsyncClientHandler] = None
 
     def __str__(self):
@@ -61,12 +73,14 @@ class Server(RepeatTimer):
 
     def init_phase(self):
         self.server_sock.listen(self.max_connection)
+        self.server_sock.settimeout(self.server_timeout)
         log.info(f'IP ==> {self.ip} port ==> {self.port}')
 
     def execute_phase(self):
         try:
             log.info('Waiting Client connect......')
             client, address = self.server_sock.accept()
+            client.settimeout(self.client_timeout)
             with client:
                 handler = AsyncClientHandler(client, self.event_handler)
                 self.client_handler = handler
@@ -78,21 +92,28 @@ class Server(RepeatTimer):
     def close_phase(self):
         self.server_sock.close()
 
+    def login(self, *args, **kwargs):
+        def wrap(func):
+            if self.is_login:
+                self.event_handler.set_login(func, args, kwargs)
+
+        return wrap
+
     def routine(self, *args, **kwargs):
         def wrap(func):
-            self.event_handler.routine_func_map[func] = (args, kwargs)
+            self.event_handler.add_routine(func, args, kwargs)
 
         return wrap
 
     def enter(self, *args, **kwargs):
         def wrap(func):
-            self.event_handler.enter_func_map[func] = (args, kwargs)
+            self.event_handler.add_enter(func, args, kwargs)
 
         return wrap
 
     def exit(self, *args, **kwargs):
         def wrap(func):
-            self.event_handler.exit_func_map[func] = (args, kwargs)
+            self.event_handler.add_exit(func, args, kwargs)
 
         return wrap
 
@@ -101,6 +122,6 @@ class Server(RepeatTimer):
             kwargs = {}
 
         def wrap(func):
-            self.event_handler.response_func_map[key] = (func, args, kwargs)
+            self.event_handler.add_response(key, func, args, kwargs)
 
         return wrap
