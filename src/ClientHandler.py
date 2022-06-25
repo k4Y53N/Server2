@@ -121,6 +121,7 @@ class ClientHandler(RepeatTimer):
             raise TypeError(f'Cant parse object to JSON {obj}')
         self.send(obj)
         if not is_login:
+            log.warning('Client login fail')
             raise RuntimeError('Client login fail')
 
     def execute_func_maps(self, func_maps: List[FunctionMap]):
