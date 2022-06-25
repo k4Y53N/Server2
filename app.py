@@ -5,7 +5,7 @@ from pathlib import Path
 from time import strftime
 from src.Server import Server
 from src.Monitor import Monitor
-from src.API import FRAME, SYS_INFO, CONFIGS, CONFIG
+from src.API import FRAME, SYS_INFO, CONFIGS, CONFIG, LOGIN_INFO
 from src.Streamer import Streamer
 from src.PWMController import PWMController
 from src.Configer import Configer
@@ -50,6 +50,13 @@ s = Server(
 )
 monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 shell_printer = ShellPrinter(s, pwm_controller, streamer)
+
+
+@s.login()
+def login(message, *args, **kwargs):
+    info = LOGIN_INFO.copy()
+    info['VERIFY'] = True
+    return info
 
 
 @s.enter(monitor, pass_address=True)
