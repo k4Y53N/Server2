@@ -54,7 +54,7 @@ shell_printer = ShellPrinter(s, pwm_controller, streamer)
 
 @s.login()
 def login(message, *args, **kwargs):
-    print(message)
+    log.info(str(message))
     info = LOGIN_INFO.copy()
     info['VERIFY'] = True
     return info
