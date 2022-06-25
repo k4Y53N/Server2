@@ -1,7 +1,7 @@
 import logging as log
 from socket import socket, AF_INET, SOCK_STREAM
 from typing import Optional, Callable, Tuple
-from .ClientHandler import AsyncClientHandler, EventHandler
+from .ClientHandler import AsyncClientHandler, EventHandler, ClientLoginFail
 from .RepeatTimer import RepeatTimer
 
 
@@ -85,9 +85,13 @@ class Server(RepeatTimer):
                 handler = AsyncClientHandler(client, self.event_handler, is_show_exc_info=self.is_show_exc_info)
                 self.client_handler = handler
                 handler.run()
+        except ClientLoginFail:
+            return
         except Exception as E:
             log.error('Error!', exc_info=self.is_show_exc_info)
-        self.client_handler = None
+            self.close()
+        finally:
+            self.client_handler = None
 
     def close_phase(self):
         self.server_sock.close()

@@ -9,6 +9,10 @@ from .RepeatTimer import RepeatTimer
 from .socketIO import recv, send
 
 
+class ClientLoginFail(Exception):
+    pass
+
+
 class FunctionMap:
     def __init__(self, func: Callable[..., Any], args: tuple = (), kwargs=None):
         if kwargs is None:
@@ -122,7 +126,7 @@ class ClientHandler(RepeatTimer):
         self.send(obj)
         if not is_login:
             log.warning('Client login fail')
-            raise RuntimeError('Client login fail')
+            raise ClientLoginFail('Client login fail')
 
     def execute_func_maps(self, func_maps: List[FunctionMap]):
         for func_map in func_maps:
