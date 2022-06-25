@@ -77,17 +77,17 @@ class Server(RepeatTimer):
         log.info(f'IP ==> {self.ip} port ==> {self.port}')
 
     def execute_phase(self):
+        log.info('Waiting Client connect......')
         try:
-            log.info('Waiting Client connect......')
             client, address = self.server_sock.accept()
             client.settimeout(self.client_timeout)
             with client:
                 handler = AsyncClientHandler(client, self.event_handler, is_show_exc_info=self.is_show_exc_info)
                 self.client_handler = handler
                 handler.run()
-            self.client_handler = None
         except Exception as E:
             log.error('Error!', exc_info=self.is_show_exc_info)
+        self.client_handler = None
 
     def close_phase(self):
         self.server_sock.close()
