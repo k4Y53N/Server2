@@ -58,7 +58,7 @@ def login(message, *args, **kwargs):
     log.info(str(message))
     info = LOGIN_INFO.copy()
     info['VERIFY'] = True
-    return info
+    return True, info
 
 
 @s.enter(monitor, pass_address=True)

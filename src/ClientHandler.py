@@ -112,7 +112,7 @@ class ClientHandler(RepeatTimer):
         func, args, kwargs = func_map.get_func_arg_kwargs()
         kwargs = self.edit_kwargs(kwargs)
         args = (message, *args)
-        obj = func(*args, **kwargs)
+        is_login, obj = func(*args, **kwargs)
         if obj is None:
             return
         if type(obj) is dict:
@@ -120,6 +120,8 @@ class ClientHandler(RepeatTimer):
         if type(obj) is not str:
             raise TypeError(f'Cant parse object to JSON {obj}')
         self.send(obj)
+        if not is_login:
+            raise RuntimeError('Client login fail')
 
     def execute_func_maps(self, func_maps: List[FunctionMap]):
         for func_map in func_maps:
