@@ -43,6 +43,7 @@ pwm_controller = PWMController((configer.pwm_speed_port, configer.pwm_angle_port
 s = Server(
     ip=configer.ip,
     port=configer.port,
+    is_login=configer.is_login,
     server_timeout=configer.server_timeout,
     client_timeout=configer.client_timeout,
     max_connection=configer.max_connection,
