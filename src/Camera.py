@@ -2,7 +2,7 @@ import cv2
 import logging as log
 import numpy as np
 from base64 import b64encode
-from typing import Union
+from typing import Optional
 from .RepeatTimer import RepeatTimer
 
 _width = 1280
@@ -51,7 +51,7 @@ class Camera(RepeatTimer):
         self.__width = int(self.__cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.__height = int(self.__cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.__is_image = False
-        self.__image: Union[np.ndarray, None] = None
+        self.__image: Optional[np.ndarray] = None
         self.lightness_text = ' .:-=+*#%@'
         self.light_lv = len(self.lightness_text) - 1
         self.encode_quality = [cv2.IMWRITE_JPEG_QUALITY, encode_quality]
