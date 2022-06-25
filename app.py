@@ -58,6 +58,8 @@ shell_printer = ShellPrinter(s, pwm_controller, streamer)
 @s.login(pwd)
 def login(message: dict, password, *args, **kwargs) -> Tuple[bool, dict]:
     p = message.get('PWD', '')
+    log.info(f'client pwd {p}')
+    log.info(f'server pwd {password}')
     log_info = LOGIN_INFO.copy()
     if p != password:
         return False, log_info
