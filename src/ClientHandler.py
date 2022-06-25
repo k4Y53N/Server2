@@ -188,8 +188,8 @@ class SyncClientHandler(ClientHandler):
 
 
 class AsyncClientHandler(ClientHandler):
-    def __init__(self, sock: socket, event_handler: EventHandler):
-        ClientHandler.__init__(self, sock, event_handler)
+    def __init__(self, sock: socket, event_handler: EventHandler, is_show_exc_info=False):
+        ClientHandler.__init__(self, sock, event_handler, is_show_exc_info)
         self.input_buffer = Queue()
         self.output_buffer = Queue()
         self.routine_thread_pool: List[Thread] = [

@@ -82,7 +82,7 @@ class Server(RepeatTimer):
             client, address = self.server_sock.accept()
             client.settimeout(self.client_timeout)
             with client:
-                handler = AsyncClientHandler(client, self.event_handler)
+                handler = AsyncClientHandler(client, self.event_handler, is_show_exc_info=self.is_show_exc_info)
                 self.client_handler = handler
                 handler.run()
             self.client_handler = None
