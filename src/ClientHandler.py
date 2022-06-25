@@ -47,7 +47,7 @@ class EventHandler:
     def get_login_func_map(self) -> Optional[FunctionMap]:
         return self.login_func_map
 
-    def get_response_func_maps(self) -> dict[str, FunctionMap]:
+    def get_response_func_maps(self) -> Dict[str, FunctionMap]:
         return self.response_func_map
 
     def get_enter_func_maps(self) -> List[FunctionMap]:
