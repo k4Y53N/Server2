@@ -1,6 +1,6 @@
 import logging as log
 from socket import socket, AF_INET, SOCK_STREAM
-from typing import Optional, Callable
+from typing import Optional, Callable, Tuple
 from .ClientHandler import AsyncClientHandler, EventHandler
 from .RepeatTimer import RepeatTimer
 
@@ -93,7 +93,7 @@ class Server(RepeatTimer):
         self.server_sock.close()
 
     def login(self, *args, **kwargs):
-        def wrap(func):
+        def wrap(func: Callable[..., Tuple[bool, dict]]):
             if self.is_login:
                 self.event_handler.set_login(func, args, kwargs)
 
@@ -106,7 +106,7 @@ class Server(RepeatTimer):
         return wrap
 
     def enter(self, *args, **kwargs):
-        def wrap(func: Callable[..., (bool, dict)]):
+        def wrap(func):
             self.event_handler.add_enter(func, args, kwargs)
 
         return wrap
