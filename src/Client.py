@@ -42,9 +42,9 @@ class Client:
             except Exception:
                 log.error('Send message fail', exc_info=self.is_show_exc_info)
 
-    def send_and_recv(self, obj: Union[str, dict]):
+    def send_and_recv(self, obj: Union[str, dict]) -> dict:
         if obj is None:
-            return
+            return {}
         ret_obj = {}
         with self.lock:
             try:
@@ -54,6 +54,8 @@ class Client:
                 ret_obj = recv(self.sock, self.header, self.encoding)
                 if type(ret_obj) is str:
                     ret_obj = json.loads(ret_obj)
+                if type(ret_obj) is not dict:
+                    ret_obj = {}
             except Exception:
                 log.error('Send and Recv message fail', exc_info=self.is_show_exc_info)
         return ret_obj
