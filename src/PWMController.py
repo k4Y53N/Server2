@@ -38,6 +38,8 @@ class PWMSimulator(RepeatTimer):
         low_time = frequency - high_time
         GPIO.output(self.__channel, GPIO.HIGH)
         sleep(high_time)
+        if low_time <= 0:
+            return
         GPIO.output(self.__channel, GPIO.LOW)
         sleep(low_time)
 
