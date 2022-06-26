@@ -58,7 +58,7 @@ def reset(message, d: ConfigManager):
     d.reset()
 
 
-@s.response('CLOSE')
+@s.response('CLOSE', detector)
 def close(message, d: ConfigManager):
     log.info('close')
     d.close()
