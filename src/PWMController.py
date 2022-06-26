@@ -210,7 +210,7 @@ class PWMController(RepeatTimer):
             theta = 90
         theta = abs(theta)
         theta %= 360
-        if self.min_angle >= theta > 270:
+        if theta < self.min_angle or theta > 270:
             theta = self.min_angle
         elif self.max_angle <= theta < 270:
             theta = self.max_angle
