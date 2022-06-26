@@ -78,7 +78,6 @@ class Streamer:
             self.__is_infer = False
             self.__is_stream = False
             self.camera.close()
-            self.config_manager.close()
         self.thread_pool.shutdown(True)
 
     def get(self) -> Frame:
