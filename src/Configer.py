@@ -19,6 +19,8 @@ class Configer:
         self.pwm_speed_port = int(config['PWM']['pwm_speed_port'])
         self.pwm_angle_port = int(config['PWM']['pwm_angle_port'])
         self.pwm_frequency = float(config['PWM']['frequency'])
+        self.pwm_min_angle = float(config['PWM']['min_angle'])
+        self.pwm_max_angle = float(config['PWM']['max_angle'])
         self.is_pwm_listen = config.getboolean('PWM', 'is_pwm_listen')
         self.max_fps = int(config['Streamer']['max_fps'])
         self.idle_interval = float(config['Streamer']['idle_interval'])

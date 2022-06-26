@@ -155,7 +155,13 @@ class PWMListener(RepeatTimer):
 
 
 class PWMController(RepeatTimer):
-    def __init__(self, channels: Tuple[int, int], frequency: float = 0.25, is_listen=False):
+    def __init__(
+            self, channels: Tuple[int, int],
+            frequency: float = 0.25,
+            min_angle=45,
+            max_angle=135,
+            is_listen=False,
+    ):
         RepeatTimer.__init__(self, interval=0.25, name='PWM_RESET')
         GPIO.setmode(GPIO.BOARD)
         self.speed = PWMSimulator(channels[0], frequency, name='PWM_SP')
@@ -166,6 +172,8 @@ class PWMController(RepeatTimer):
         self.listener = PWMListener(
             (self.speed, self.angle)
         )
+        self.min_angle = min_angle
+        self.max_angle = max_angle
 
     def __str__(self):
         if self.is_listen:
@@ -200,16 +208,15 @@ class PWMController(RepeatTimer):
             r = 1
         if r == 0:
             theta = 90
-
+        theta = abs(theta)
         theta %= 360
-
-        if 180 <= theta < 270:
-            theta = 180
-        elif 270 < theta <= 360:
-            theta = 0
+        if self.min_angle >= theta > 270:
+            theta = self.min_angle
+        elif self.max_angle <= theta < 270:
+            theta = self.max_angle
         elif theta == 270:
-            theta = 90
             r = 0
+            theta = 90
 
         self.speed.change_duty_cycle_percent(r / 1 * 100)
         self.angle.change_duty_cycle_percent(theta / 180 * 100)

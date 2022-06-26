@@ -19,6 +19,8 @@ if __name__ == '__main__':
         'pwm_speed_port': 37,
         'pwm_angle_port': 38,
         'frequency': 0.25,
+        'min_angle': 45,
+        'max_angle': 135,
         'is_pwm_listen': False
     }
 

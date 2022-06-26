@@ -40,8 +40,14 @@ streamer = Streamer(
 
 monitor = Monitor()
 
-pwm_controller = PWMController((configer.pwm_speed_port, configer.pwm_angle_port), configer.pwm_frequency,
-                               configer.is_pwm_listen)
+pwm_controller = PWMController(
+    (configer.pwm_speed_port, configer.pwm_angle_port),
+    configer.pwm_frequency,
+    min_angle=configer.pwm_min_angle,
+    max_angle=configer.pwm_max_angle,
+    is_listen=configer.is_pwm_listen
+)
+
 s = Server(
     ip=configer.ip,
     port=configer.port,
@@ -51,6 +57,7 @@ s = Server(
     max_connection=configer.max_connection,
     is_show_exc_info=configer.is_show_exc_info
 )
+
 monitor.set_row_string(0, '%s:%s' % (s.ip, s.port))
 shell_printer = ShellPrinter(s, pwm_controller, streamer)
 
