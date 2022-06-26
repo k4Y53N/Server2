@@ -176,8 +176,8 @@ def set_quality(message, st: Streamer, *args, **kwargs):
     width = int(message.get('WIDTH', 0))
     height = int(message.get('HEIGHT', 0))
     log.info(f'Set Quality: W = {width}, H = {height}')
-    if 100 < width < 4196 or 100 < height < 4196:
-        return
+    # if 100 < width < 4196 or 100 < height < 4196:
+    #     return
     st.set_quality(width, height)
 
 
