@@ -217,6 +217,7 @@ class PWMController(RepeatTimer):
         elif theta == 270:
             r = 0
             theta = 90
+        theta %= 180
 
         self.speed.change_duty_cycle_percent(r / 1 * 100)
         self.angle.change_duty_cycle_percent(theta / 180 * 100)
