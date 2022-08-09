@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from src.utils.APIs import *
+from src.API import *
 
 cmd_dir = Path('src/utils/APIs')
 configs_dir = Path('./configs')
