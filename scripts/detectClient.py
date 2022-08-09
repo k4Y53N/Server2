@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append('.')
-from src.Detector import RemoteConfigManager
+from nanoServer.Detector import RemoteConfigManager
 import cv2
 
 image = cv2.imread('../person.jpg')

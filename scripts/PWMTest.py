@@ -1,11 +1,11 @@
-from src.PWMController import PWMListener, NoGpioPWMSimulator
-from src.ShellPrinter import ShellPrinter
-from src.Monitor import Monitor
+from nanoServer.PWMController import PWMListener, NoGpioPWMSimulator
+from nanoServer.ShellPrinter import ShellPrinter
+from nanoServer.Monitor import Monitor
 from Jetson import GPIO
 from time import sleep
 
 if __name__ == '__main__':
-    sys.path.append('../src')
+    sys.path.append('../nanoServer')
     GPIO.setmode(GPIO.BOARD)
     m = Monitor()
     pwms = [NoGpioPWMSimulator(1, 50, name='NoPWM') for _ in range(4)]

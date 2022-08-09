@@ -6,7 +6,7 @@ from json import loads, dumps
 from struct import calcsize, pack, unpack
 from typing import Union, Tuple
 from .RepeatTimer import RepeatTimer
-from src.API import SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN
+from nanoServer.API import SYS_LOGOUT, SYS_EXIT, SYS_SHUTDOWN
 
 _LOGOUT = 'LOGOUT'
 _SYS_CTRL_EXIT = 'EXIT'

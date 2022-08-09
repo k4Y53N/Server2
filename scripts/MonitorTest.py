@@ -1,5 +1,5 @@
 from time import sleep
-from src.Monitor import Monitor
+from nanoServer.Monitor import Monitor
 
 if __name__ == '__main__':
 

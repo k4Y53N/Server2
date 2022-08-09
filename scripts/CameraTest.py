@@ -1,5 +1,5 @@
-from src.Camera import Camera
-from src.ShellPrinter import ShellPrinter
+from nanoServer.Camera import Camera
+from nanoServer.ShellPrinter import ShellPrinter
 from time import sleep
 
 if __name__ == '__main__':

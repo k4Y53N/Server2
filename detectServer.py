@@ -3,10 +3,10 @@ import numpy as np
 import logging as log
 from base64 import b64decode
 from typing import Optional
-from src.Detector.ConfigManager import ConfigManager
-from src.Detector.ConfigManagerAPI import RESULT, CONFIG, CONFIGS
-from src.Server import Server
-from src.utils.util import get_hostname
+from nanoServer.Detector.ConfigManager import ConfigManager
+from nanoServer.Detector.ConfigManagerAPI import RESULT, CONFIG, CONFIGS
+from nanoServer.Server import Server
+from nanoServer.utils.util import get_hostname
 
 
 def decode_b64image(b64image: str) -> Optional[np.ndarray]:

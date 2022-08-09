@@ -1,4 +1,4 @@
-from src.ShellPrinter import LinuxShellPrinter
+from nanoServer.ShellPrinter import LinuxShellPrinter
 from time import sleep
 
 if __name__ == '__main__':

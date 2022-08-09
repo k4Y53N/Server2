@@ -3,14 +3,14 @@ import logging as log
 from typing import Tuple
 from pathlib import Path
 from time import strftime
-from src.Server import Server
-from src.Monitor import Monitor
-from src.API import FRAME, SYS_INFO, CONFIGS, CONFIG, LOGIN_INFO
-from src.Streamer import Streamer
-from src.PWMController import PWMController
-from src.Configer import Configer
-from src.ShellPrinter import ShellPrinter
-from src.utils.util import read_pwd
+from nanoServer.Server import Server
+from nanoServer.Monitor import Monitor
+from nanoServer.API import FRAME, SYS_INFO, CONFIGS, CONFIG, LOGIN_INFO
+from nanoServer.Streamer import Streamer
+from nanoServer.PWMController import PWMController
+from nanoServer.Configer import Configer
+from nanoServer.ShellPrinter import ShellPrinter
+from nanoServer.utils.util import read_pwd
 
 configer = Configer('./sys.ini')
 log_dir = Path('logs')
