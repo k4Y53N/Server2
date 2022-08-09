@@ -1,3 +1,11 @@
+### Demo Video
+
+[![Deni](https://img.youtube.com/vi/7M7MlFNLrbI/0.jpg)](https://youtu.be/7M7MlFNLrbI)
+
+### My Training yolo project
+
+<https://github.com/k4Y53N/train-yolo>
+
 ### TCP/IP Socket
 
 伺服器與手機之間我們用TCP/IP的通訊協定,進行兩邊的訊息交換。Socket的訊息傳遞皆是Byte,假設我們要傳遞一個字串,我們就要把字串編碼成Byte,再以Socket傳遞出去。訊息的長度如果是固定的話,我們可以每次傳送與接收固定長度的Bytes即可,但是在實作中很難確保要傳送與接收的訊息長度都是固定的,於是要達成可以接收非固定長度的訊息,我們在傳送、接收訊息本體前,先傳送或接收一個標頭,我們將標頭的長度設定於固定的4個Byte,以這個標頭來代表一個整數,這個整數又代表了訊息長度,如此一來,只要花費極少的傳輸量即可以讓我們的訊息可以用非固定的長度進行傳輸。
@@ -92,7 +100,6 @@ train_set_dir = /mnt/f/train2014
 train_annotation_path = /mnt/f/instances_train2014.json
 test_set_dir = /mnt/f/val2014
 test_annotation_path = /mnt/f/instances_val2014.json
-
 [Save_dir]
 checkpoints = checkpoints
 weights = weights
@@ -191,30 +198,28 @@ port = 0
 server_timeout = 300
 client_timeout = 60
 is_show_exc_info = True
+max_connection = 1
 log_level = 20
-
 [PWM]
 pwm_speed_port = 37
 pwm_angle_port = 38
 frequency = 0.25
 is_pwm_listen = False
-
 [Streamer]
 max_fps = 30
 idle_interval = 1
 timeout = 10
 jpg_encode_rate = 50
-
 [Detector]
 configs = configs/
 is_local_detector = True
-detect_server_ip = 192.168.0.2
-detect_server_port = 5050
-
+detect_server_ip = 192.168.0.1
+detect_server_port = 0
+timeout = 10
 ```
 
 ```commandline
-python3 main.py
+python3 app.py
 ```
 
 ### 軟體架構
